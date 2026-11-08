@@ -20,6 +20,12 @@ Otvori `index.html` u pregledniku (dvoklik). Backend nije potreban. Potreban je 
 - Zvukovi se generiraju Web Audio API-jem: čegrtaljka koja usporava zajedno s globusom, „pop” i „ta-da!”.
 - **Odrađene države** spremaju se u `localStorage`. Na globusu su sive i više se ne mogu izvući.
   Tu su i brojač, reset liste i ručni unos (📝).
+- **Zanimljivosti na kartici**: glavni grad, kontinent, približan broj stanovnika i zračna udaljenost od Zagreba
+  (računa se iz karte; mjesto mijenjaš u `CONFIG.home`).
+- **💬 Gledatelji biraju**: zalijepi komentare ili upiši države. Aplikacija prepozna države (hrvatska, engleska i susjedna imena,
+  kratice poput SAD/BiH/UK te padeže poput „u Japanu”) i broji glasove. Globus tada bira samo između predloženih država,
+  a ostale izblijede. Tijekom vrtnje pojavljuje se natpis „Pogodi državu u komentarima!”, a na kartici piše koliko je glasova
+  država dobila. Opcija „Više glasova = veća šansa” daje državama s više glasova veću šansu.
 - **Način za snimanje**: 📱 prebacuje na format 9:16, a 🎬 uključuje čisti prikaz u kojem je vidljiv samo gumb ZAVRTI!.
   Iz čistog prikaza izlaziš tipkom H ili Esc, ili dvostrukim dodirom pozadine.
 - Tipkovnica: razmak/Enter = zavrti, H = čisti prikaz, D = označi odrađeno.
@@ -33,6 +39,8 @@ Sve je u `index.html`:
 | Boje sučelja (pozadina, gumbi, obrubi) | CSS varijable u `:root` na vrhu |
 | Trajanje vrtnje, broj okretaja, krivulja usporavanja, boje globusa, debljina obruba | objekt `CONFIG` |
 | Podaci o državama i jelima | niz `COUNTRIES` (jedna država = jedan red) |
+| Glavni grad, kontinent, broj stanovnika | objekt `FACTS` |
+| Zamjenska imena država za prepoznavanje u komentarima | niz `ALIASES` |
 
 Polja u `COUNTRIES`: `id` (numerički ISO kod iz world-atlas), `iso2` (za zastavu), `ime`, `jelo`, `izvorno`,
 `emoji`, `opis` i neobavezno `pin: [dužina, širina]` za države kojih nema na karti.
