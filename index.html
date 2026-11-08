@@ -1,0 +1,1590 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Zavrti globus – jelo iz svake države</title>
+<meta name="description" content="Zavrti cartoon globus, otkrij nasumičnu državu i njezino nacionalno jelo.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* =====================================================================
+   1) BOJE I OSNOVNE POSTAVKE  – ovdje lako mijenjaš izgled
+   ===================================================================== */
+:root{
+  --ink:#2B2140;          /* tamni "cartoon" obrub svega */
+  --bg1:#FFE98F;          /* pozadinski gradijent – gore */
+  --bg2:#FFB65C;          /* sredina */
+  --bg3:#FF8A65;          /* dolje */
+  --card:#FFFDF5;         /* kartica jela */
+  --spin:#FF5C8A;  --spin-dark:#C2335E;   /* gumb ZAVRTI! */
+  --green:#46D08A; --green-dark:#22985B;
+  --blue:#4FB3FF;  --blue-dark:#2275C2;
+  --yellow:#FFE14D;
+  --font:"Fredoka","Baloo 2","Arial Rounded MT Bold","Nunito",system-ui,sans-serif;
+
+  /* Ove tri varijable postavlja JS prema veličini ekrana (vidi layout()) */
+  --u:4px;        /* osnovna jedinica za fontove/razmake */
+  --cardW:420px;  /* širina kartice (vodoravni raspored) */
+  --cardH:300px;  /* visina kartice (uspravni raspored)   */
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:var(--font);color:var(--ink);overflow:hidden;
+  background:linear-gradient(165deg,var(--bg1),var(--bg2) 55%,var(--bg3));
+  -webkit-tap-highlight-color:transparent;
+  display:flex;align-items:center;justify-content:center;
+}
+button{font-family:inherit;color:inherit;cursor:pointer;border:0;background:none}
+img{display:block}
+[hidden]{display:none!important}
+
+/* =====================================================================
+   2) GLAVNI RASPORED (grid) – vodoravni i uspravni (portrait / 9:16)
+   ===================================================================== */
+.app{
+  position:relative;width:100vw;height:100vh;height:100dvh;overflow:hidden;
+  background:linear-gradient(165deg,var(--bg1),var(--bg2) 55%,var(--bg3));
+  display:grid;gap:calc(var(--u)*2);
+  padding:calc(var(--u)*2.5) calc(var(--u)*3);
+  padding-top:max(calc(var(--u)*2.5), env(safe-area-inset-top));
+  padding-bottom:max(calc(var(--u)*2.5), env(safe-area-inset-bottom));
+  grid-template-columns:minmax(0,1fr) var(--cardW);
+  grid-template-rows:auto minmax(0,1fr) auto;
+  grid-template-areas:"top top" "globe card" "ctrl card";
+}
+.app.portrait{
+  grid-template-columns:minmax(0,1fr);
+  grid-template-rows:auto minmax(0,1fr) var(--cardH) auto;
+  grid-template-areas:"top" "globe" "card" "ctrl";
+  padding-left:calc(var(--u)*3);padding-right:calc(var(--u)*3);
+}
+/* Način za snimanje 9:16 – okvir točno u omjeru 9:16, centriran */
+body.vertical{background:#2B2140 radial-gradient(rgba(255,255,255,.08) 2px,transparent 2.5px) 0 0/26px 26px}
+body.vertical .app{
+  width:min(100vw, calc(100dvh * 9 / 16));height:min(100dvh, calc(100vw * 16 / 9));
+  border-radius:clamp(0px, calc((100vw - 100dvh * 9 / 16) * 9), 28px);
+  box-shadow:0 0 0 4px var(--ink),0 20px 60px rgba(0,0,0,.45);
+}
+
+/* Pozadinske točkice i zvjezdice */
+.sky{position:absolute;inset:0;pointer-events:none;z-index:0;
+  background-image:radial-gradient(rgba(255,255,255,.55) 1.6px,transparent 2.2px);
+  background-size:34px 34px}
+.star{position:absolute;color:#fff;opacity:.85;text-shadow:0 0 6px rgba(255,255,255,.8);
+  animation:twinkle 3s ease-in-out infinite;font-size:calc(var(--u)*4)}
+@keyframes twinkle{0%,100%{transform:scale(.6) rotate(0);opacity:.4}50%{transform:scale(1.15) rotate(20deg);opacity:1}}
+
+/* =====================================================================
+   3) ZAGLAVLJE – naslov, brojač, alatna traka
+   ===================================================================== */
+.topbar{grid-area:top;position:relative;z-index:5;display:flex;align-items:center;gap:calc(var(--u)*3);flex-wrap:wrap}
+.brand{flex:1 1 auto;min-width:0}
+.title{font-weight:700;line-height:1;font-size:calc(var(--u)*8.5);letter-spacing:.5px;color:#fff;
+  -webkit-text-stroke:calc(var(--u)*.55) var(--ink);paint-order:stroke fill;
+  text-shadow:0 calc(var(--u)*.9) 0 var(--ink)}
+.subtitle{font-weight:600;font-size:calc(var(--u)*3.8);margin-top:calc(var(--u)*1)}
+.stats{background:#fff;border:3px solid var(--ink);border-radius:999px;padding:calc(var(--u)*1.2) calc(var(--u)*3);
+  box-shadow:0 4px 0 var(--ink);min-width:calc(var(--u)*40)}
+.counter{font-size:calc(var(--u)*3.6);font-weight:600;white-space:nowrap}
+.counter b{font-weight:700}
+.progress{height:calc(var(--u)*1.6);border:2px solid var(--ink);border-radius:99px;margin-top:calc(var(--u)*.6);overflow:hidden;background:#F1ECFF}
+.progress div{height:100%;width:0;background:linear-gradient(90deg,var(--green),#B7F06B);transition:width .6s cubic-bezier(.3,1.6,.5,1)}
+.toolbar{display:flex;gap:calc(var(--u)*1.2);flex-wrap:wrap;justify-content:flex-end}
+.tool{background:#fff;border:3px solid var(--ink);border-radius:calc(var(--u)*3);font-weight:600;
+  font-size:calc(var(--u)*3.2);padding:calc(var(--u)*1.2) calc(var(--u)*2.2);
+  box-shadow:0 4px 0 var(--ink);transition:transform .08s,box-shadow .08s,background .2s;white-space:nowrap}
+.tool:hover{background:#FFF6D6}
+.tool:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
+.tool[aria-pressed="true"]{background:var(--yellow)}
+.portrait .topbar{gap:calc(var(--u)*2)}
+.portrait .toolbar{flex:1 1 100%;justify-content:center}
+.portrait .tool span{display:none}             /* na mobitelu samo ikonice */
+.portrait .tool{font-size:calc(var(--u)*4.4);padding:calc(var(--u)*1) calc(var(--u)*2.2)}
+.portrait .stats{min-width:0;padding:calc(var(--u)*1) calc(var(--u)*2.4)}
+.portrait .title{font-size:calc(var(--u)*7.2)}
+.portrait .subtitle{font-size:calc(var(--u)*3.5);margin-top:calc(var(--u)*.6)}
+.portrait .counter{font-size:calc(var(--u)*3.4)}
+
+/* =====================================================================
+   4) GLOBUS, OBLAČIĆI, BALON S IMENOM
+   ===================================================================== */
+.globe-area{grid-area:globe;position:relative;z-index:2;min-height:0}
+.globe-holder{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%)}
+.globe-shadow{position:absolute;left:12%;right:12%;bottom:-7%;height:9%;border-radius:50%;
+  background:radial-gradient(rgba(43,33,64,.35),transparent 70%);transition:transform .3s}
+.globe-bounce{width:100%;height:100%;transform-origin:50% 85%}
+.globe-bounce.bounce{animation:globeBounce .75s cubic-bezier(.3,.7,.4,1)}
+@keyframes globeBounce{0%{transform:scale(1)}20%{transform:scale(1.09,.9)}45%{transform:scale(.95,1.06)}70%{transform:scale(1.025,.98)}100%{transform:scale(1)}}
+.globe-wobble{width:100%;height:100%;position:relative;will-change:transform}
+#globe{width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+#globe.dragging{cursor:grabbing}
+
+/* Lice globusa (okice + osmijeh). Izrazi: idle / dizzy / happy */
+.face{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;transition:opacity .4s}
+.face g{transition:opacity .25s}
+.face .dizzy,.face .happy{opacity:0}
+.mood-dizzy .face .idle,.mood-happy .face .idle{opacity:0}
+.mood-dizzy .face .dizzy{opacity:1}
+.mood-happy .face .happy{opacity:1}
+.face .blink{animation:blink 4.2s infinite;transform-box:fill-box;transform-origin:center}
+@keyframes blink{0%,92%,100%{transform:scaleY(1)}95%{transform:scaleY(.1)}}
+.face .swirl{animation:swirl .6s linear infinite;transform-box:fill-box;transform-origin:center}
+@keyframes swirl{to{transform:rotate(360deg)}}
+body.no-face .face{opacity:0}
+
+/* Oblačići koji polako lebde */
+.cloud{position:absolute;pointer-events:none;z-index:3;animation:drift 14s ease-in-out infinite alternate}
+.cloud svg{width:100%;height:auto;display:block;animation:bob 4s ease-in-out infinite}
+.cloud.c1{width:24%;max-width:180px;left:2%;top:10%}
+.cloud.c2{width:19%;max-width:140px;right:3%;top:24%;animation-duration:18s;animation-delay:-6s}
+.cloud.c3{width:21%;max-width:160px;left:8%;bottom:6%;animation-duration:16s;animation-delay:-3s;z-index:1}
+.cloud.c2 svg{animation-delay:-1.5s}.cloud.c3 svg{animation-delay:-2.5s}
+@keyframes drift{from{transform:translateX(-14%)}to{transform:translateX(18%)}}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-8%)}}
+
+/* Balon s imenom države + zastavom */
+.balloon{position:absolute;left:50%;top:0;z-index:6;display:flex;align-items:center;gap:calc(var(--u)*2);
+  background:#fff;border:4px solid var(--ink);border-radius:calc(var(--u)*5);
+  padding:calc(var(--u)*1.6) calc(var(--u)*3.2);box-shadow:0 6px 0 var(--ink);
+  transform:translate(-50%,-55%) scale(0);transform-origin:50% 100%;pointer-events:none;width:max-content;max-width:100%}
+.balloon::after{content:"";position:absolute;left:50%;bottom:calc(var(--u)*-3.1);width:calc(var(--u)*4);height:calc(var(--u)*4);
+  background:#fff;border-right:4px solid var(--ink);border-bottom:4px solid var(--ink);transform:translateX(-50%) rotate(45deg)}
+.balloon.show{animation:balloonPop .6s cubic-bezier(.2,1.4,.4,1) forwards}
+.balloon.hide{animation:balloonOut .3s ease-in forwards}
+@keyframes balloonPop{0%{transform:translate(-50%,-30%) scale(0)}60%{transform:translate(-50%,-60%) scale(1.12)}100%{transform:translate(-50%,-55%) scale(1)}}
+@keyframes balloonOut{from{transform:translate(-50%,-55%) scale(1);opacity:1}to{transform:translate(-50%,-40%) scale(.3);opacity:0}}
+.balloon-name{font-weight:700;font-size:calc(var(--u)*6);line-height:1.05;text-align:center;min-width:0}
+.balloon-flag{flex:0 0 auto;line-height:0;transform:scale(0)}
+.balloon.show .balloon-flag{animation:flagPop .55s .15s cubic-bezier(.2,1.5,.4,1) forwards}
+@keyframes flagPop{0%{transform:scale(0)}65%{transform:scale(1.2)}100%{transform:scale(1)}}
+
+/* Zastava koja se vijori (koristi se u balonu i na kartici).
+   Slika zadržava svoj pravi omjer (npr. Nepal, Švicarska), visina je --fh. */
+.flag{position:relative;display:inline-block;line-height:0;--fh:calc(var(--u)*8.5)}
+.flag img{height:var(--fh);width:auto;max-width:calc(var(--fh)*2.1);min-width:calc(var(--fh)*.8);object-fit:cover;
+  border:3px solid var(--ink);border-radius:calc(var(--fh)*.14);background:#fff}
+.flag .emoji-flag{display:inline-flex;align-items:center;justify-content:center;height:var(--fh);font-size:calc(var(--fh)*.9);line-height:1}
+.flag.wave{animation:flagWave 1.6s ease-in-out infinite;transform-origin:0 50%}
+.flag.wave::after{content:"";position:absolute;inset:3px;pointer-events:none;border-radius:calc(var(--fh)*.1);
+  background:linear-gradient(100deg,transparent 0%,rgba(255,255,255,.35) 18%,transparent 34%,rgba(0,0,0,.12) 52%,transparent 68%,rgba(255,255,255,.3) 84%,transparent 100%);
+  background-size:200% 100%;animation:flagShine 1.6s linear infinite}
+@keyframes flagWave{0%,100%{transform:skewY(0) rotate(0)}25%{transform:skewY(3deg) rotate(-2deg)}50%{transform:skewY(0) rotate(0) scaleX(.97)}75%{transform:skewY(-3deg) rotate(2deg)}}
+@keyframes flagShine{from{background-position:200% 0}to{background-position:0 0}}
+
+.loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;
+  font-weight:600;font-size:calc(var(--u)*5);z-index:4}
+
+/* =====================================================================
+   5) KARTICA JELA
+   ===================================================================== */
+.card-area{grid-area:card;position:relative;z-index:4;min-height:0;display:flex;align-items:center;justify-content:center}
+.portrait .card-area{align-items:stretch}
+.card{position:relative;width:100%;background:var(--card);border:4px solid var(--ink);border-radius:calc(var(--u)*6);
+  box-shadow:0 calc(var(--u)*2) 0 var(--ink),0 calc(var(--u)*4) calc(var(--u)*6) rgba(43,33,64,.25);
+  padding:calc(var(--u)*4);text-align:center}
+.portrait .card{height:100%;overflow:auto;display:flex;flex-direction:column;justify-content:center;padding:calc(var(--u)*3)}
+.card.placeholder{background:repeating-linear-gradient(45deg,#FFF8E3 0 calc(var(--u)*4),#FFEFC6 calc(var(--u)*4) calc(var(--u)*8));transition:opacity .35s,transform .35s}
+.card.placeholder.dim{opacity:.55;transform:scale(.96)}
+.ph-icon{font-size:calc(var(--u)*16);line-height:1.1;animation:float 2.6s ease-in-out infinite}
+.ph-title{font-weight:700;font-size:calc(var(--u)*7);margin-top:calc(var(--u)*1)}
+.ph-text{font-size:calc(var(--u)*4);margin-top:calc(var(--u)*1.5);opacity:.85}
+.portrait .ph-icon{font-size:calc(var(--u)*13)}
+.portrait .ph-title{font-size:calc(var(--u)*6.5)}
+
+.card.dish{will-change:transform;--fu:calc(var(--u) * var(--fit,1))}
+.card.dish.enter{animation:cardIn .85s cubic-bezier(.2,1.25,.4,1) both}
+.card.dish.leave{animation:cardOut .4s cubic-bezier(.5,0,.8,.3) both}
+@keyframes cardIn{0%{transform:translateY(130%) rotate(6deg);opacity:0}55%{transform:translateY(-6%) rotate(-2deg);opacity:1}75%{transform:translateY(2%) rotate(1deg)}100%{transform:translateY(0) rotate(0)}}
+@keyframes cardOut{to{transform:translateY(140%) rotate(-5deg);opacity:0}}
+.dish-head{display:flex;align-items:center;justify-content:center;gap:calc(var(--fu)*3)}
+.dish-head .flag{--fh:calc(var(--fu)*13);flex:0 0 auto}
+.dish-head .flag img{border-width:4px;box-shadow:0 4px 0 var(--ink)}
+.dish-country{font-weight:700;font-size:calc(var(--fu)*7);line-height:1.05;text-align:left}
+.dish-label{font-size:calc(var(--fu)*3.4);text-align:left;opacity:.7;font-weight:500;text-transform:uppercase;letter-spacing:1px}
+.dish-emoji{font-size:calc(var(--fu)*19);line-height:1.15;margin:calc(var(--fu)*2) auto 0;width:calc(var(--fu)*30);height:calc(var(--fu)*30);
+  display:flex;align-items:center;justify-content:center;border-radius:50%;background:radial-gradient(#fff 55%,#FFE7A8 56%,#FFE7A8 66%,#fff 67%);
+  border:4px solid var(--ink);box-shadow:0 5px 0 var(--ink)}
+.dish-emoji span{animation:float 2.4s ease-in-out infinite;display:block}
+@keyframes float{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-7%) rotate(4deg)}}
+.dish-name{font-weight:700;font-size:calc(var(--fu)*9);line-height:1.05;margin-top:calc(var(--fu)*3)}
+.dish-orig{font-size:calc(var(--fu)*4.4);font-weight:500;opacity:.75;margin-top:calc(var(--fu)*1)}
+.dish-desc{font-size:calc(var(--fu)*4.3);line-height:1.35;margin-top:calc(var(--fu)*2.5);font-weight:400}
+.dish-actions{display:flex;gap:calc(var(--fu)*2);justify-content:center;flex-wrap:wrap;margin-top:calc(var(--fu)*3.5)}
+.portrait .dish-emoji{width:calc(var(--fu)*19);height:calc(var(--fu)*19);font-size:calc(var(--fu)*11.5);margin-top:calc(var(--fu)*1.5)}
+.portrait .dish-name{font-size:calc(var(--fu)*8.5);margin-top:calc(var(--fu)*2)}
+.portrait .dish-head .flag{--fh:calc(var(--fu)*11)}
+
+/* =====================================================================
+   6) GUMBI – veliki, zaobljeni, s "3D" sjenom i bounce efektom
+   ===================================================================== */
+.controls{grid-area:ctrl;display:flex;justify-content:center;position:relative;z-index:5;padding-bottom:calc(var(--u)*2)}
+.btn{--c:var(--blue);--d:var(--blue-dark);display:inline-flex;align-items:center;justify-content:center;gap:.4em;
+  background:var(--c);color:#fff;font-weight:700;font-size:calc(var(--u)*4.2);text-decoration:none;
+  padding:calc(var(--u)*2) calc(var(--u)*4.5);border:4px solid var(--ink);border-radius:999px;
+  box-shadow:0 calc(var(--u)*1.6) 0 var(--d),0 calc(var(--u)*1.6) 0 4px var(--ink);
+  text-shadow:0 2px 0 rgba(0,0,0,.25);transition:transform .08s,box-shadow .08s,filter .2s;user-select:none;white-space:nowrap}
+.btn:hover{filter:brightness(1.06)}
+.btn:active{transform:translateY(calc(var(--u)*1.3));box-shadow:0 calc(var(--u)*.3) 0 var(--d),0 calc(var(--u)*.3) 0 4px var(--ink)}
+.btn.pop{animation:btnPop .45s cubic-bezier(.3,1.8,.5,1)}
+@keyframes btnPop{0%{transform:scale(.88) translateY(4px)}55%{transform:scale(1.08)}100%{transform:scale(1)}}
+.btn:disabled{filter:grayscale(.6) brightness(.95);cursor:default}
+.btn-green{--c:var(--green);--d:var(--green-dark)}
+.btn-done{--c:#A9A3BC;--d:#76708C}
+.btn-spin{--c:var(--spin);--d:var(--spin-dark);font-size:calc(var(--u)*9);padding:calc(var(--u)*2.6) calc(var(--u)*11);letter-spacing:2px;
+  -webkit-text-stroke:calc(var(--u)*.35) var(--ink);paint-order:stroke fill;text-shadow:0 3px 0 var(--ink)}
+.btn-spin.small{font-size:calc(var(--u)*7);padding:calc(var(--u)*2.2) calc(var(--u)*8)}
+.btn-spin:not(:disabled){animation:breathe 2.2s ease-in-out infinite}
+.btn-spin.pop{animation:btnPop .45s cubic-bezier(.3,1.8,.5,1)}
+.btn-spin:active{animation:none}
+.dish-actions .btn{font-size:calc(var(--fu)*4.2);padding:calc(var(--fu)*1.8) calc(var(--fu)*4)}
+@keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
+.portrait .btn-spin{font-size:calc(var(--u)*8.5);padding:calc(var(--u)*2.4) calc(var(--u)*12)}
+.portrait .btn-spin.small{font-size:calc(var(--u)*7);padding:calc(var(--u)*2.2) calc(var(--u)*6.5);letter-spacing:1px}
+
+/* Čisti prikaz (za snimanje ekrana): sakrij sve gumbe osim ZAVRTI! */
+body.clean .hide-in-clean{display:none!important}
+.exit-clean{position:absolute;top:8px;right:8px;z-index:30;width:34px;height:34px;border-radius:50%;
+  background:rgba(255,255,255,.7);border:2px solid var(--ink);font-weight:700;opacity:0;transition:opacity .3s;display:none}
+body.clean .exit-clean{display:block}
+.exit-clean:hover,.exit-clean:focus-visible{opacity:1}
+
+#confetti{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:20}
+
+.toast{position:absolute;left:50%;bottom:calc(var(--u)*22);z-index:40;transform:translate(-50%,30px);opacity:0;
+  background:var(--ink);color:#fff;font-weight:600;font-size:calc(var(--u)*3.8);padding:calc(var(--u)*2) calc(var(--u)*4);
+  border-radius:999px;transition:opacity .3s,transform .3s cubic-bezier(.3,1.6,.5,1);pointer-events:none;text-align:center;max-width:90%}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+
+/* =====================================================================
+   7) MODALNI PROZORI (ručni unos, potvrda)
+   ===================================================================== */
+.modal{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;padding:16px;
+  background:rgba(43,33,64,.55);backdrop-filter:blur(3px);animation:fadeIn .2s}
+@keyframes fadeIn{from{opacity:0}}
+.modal-box{background:var(--card);border:4px solid var(--ink);border-radius:26px;box-shadow:0 10px 0 var(--ink);
+  width:min(560px,100%);max-height:min(86vh,760px);display:flex;flex-direction:column;padding:20px;animation:modalIn .4s cubic-bezier(.2,1.4,.4,1)}
+@keyframes modalIn{from{transform:translateY(40px) scale(.9);opacity:0}}
+#modalManual .modal-box{height:min(86vh,760px)}
+.modal-box h3{font-size:24px;font-weight:700;margin-bottom:6px}
+.modal-box p{font-size:17px;line-height:1.4}
+.modal-actions{display:flex;gap:12px;justify-content:flex-end;margin-top:16px;flex-wrap:wrap}
+.modal .btn{font-size:18px;padding:10px 22px;box-shadow:0 6px 0 var(--d),0 6px 0 4px var(--ink)}
+.search{width:100%;font:inherit;font-size:18px;padding:10px 16px;border:3px solid var(--ink);border-radius:16px;margin:8px 0;outline:none;background:#fff}
+.search:focus{box-shadow:0 0 0 4px var(--yellow)}
+.chips{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+.chip{border:3px solid var(--ink);border-radius:99px;padding:4px 14px;font-weight:600;font-size:15px;background:#fff}
+.chip.active{background:var(--yellow)}
+.chips .info{margin-left:auto;font-weight:600;font-size:15px}
+.country-list{list-style:none;overflow:auto;flex:1 1 auto;border:3px solid var(--ink);border-radius:16px;background:#fff;min-height:120px}
+.country-list li label{display:flex;align-items:center;gap:12px;padding:8px 14px;cursor:pointer;font-size:17px;border-bottom:2px dashed #EEE7FF}
+.country-list li label:hover{background:#FFF6D6}
+.country-list input{width:22px;height:22px;accent-color:var(--green-dark);flex:0 0 auto}
+.country-list .mini-flag{width:34px;height:24px;object-fit:cover;border:2px solid var(--ink);border-radius:5px;flex:0 0 auto;background:#eee}
+.country-list .mini-emoji{width:34px;text-align:center;font-size:20px;flex:0 0 auto}
+.country-list .dish-hint{margin-left:auto;font-size:14px;opacity:.6;text-align:right}
+.country-list li.done label{background:#EFFFF5}
+@media (prefers-reduced-motion:reduce){.cloud,.star,.btn-spin,.ph-icon,.dish-emoji span{animation:none!important}}
+</style>
+</head>
+<body>
+<div id="app" class="app">
+  <div class="sky" id="sky" aria-hidden="true"></div>
+
+  <!-- ===== ZAGLAVLJE ===== -->
+  <header class="topbar">
+    <div class="brand">
+      <h1 class="title">Zavrti globus</h1>
+      <p class="subtitle">jelo iz svake države 🍽️</p>
+    </div>
+    <div class="stats" title="Koliko si država već skuhao">
+      <div class="counter">Odrađeno: <b id="doneCount">0</b> / <b id="totalCount">195</b></div>
+      <div class="progress"><div id="progressBar"></div></div>
+    </div>
+    <nav class="toolbar hide-in-clean" aria-label="Alati">
+      <button class="tool" id="btnManual" title="Ručno označi države koje si već napravio">📝 <span>Ručni unos</span></button>
+      <button class="tool" id="btnResetList" title="Obriši popis odrađenih država">🗑️ <span>Reset liste</span></button>
+      <button class="tool" id="btnVertical" aria-pressed="false" title="Vertikalni format 9:16 za snimanje">📱 <span>9:16</span></button>
+      <button class="tool" id="btnClean" aria-pressed="false" title="Sakrij sve gumbe osim ZAVRTI! (tipka H)">🎬 <span>Čisti prikaz</span></button>
+      <button class="tool" id="btnFace" aria-pressed="true" title="Lice na globusu">😊</button>
+      <button class="tool" id="btnSound" aria-pressed="true" title="Zvuk">🔊</button>
+    </nav>
+  </header>
+
+  <!-- ===== GLOBUS ===== -->
+  <section class="globe-area" id="globeArea">
+    <div class="cloud c1" aria-hidden="true"><svg viewBox="0 0 120 70"><path d="M26 62Q4 62 7 45Q5 28 24 29Q25 10 46 13Q58 0 75 12Q95 7 97 28Q115 30 113 47Q113 62 95 62Z" fill="#fff" stroke="#2B2140" stroke-width="4" stroke-linejoin="round"/><path d="M22 40Q24 33 32 33M50 22Q55 17 62 19" fill="none" stroke="#DDEBFF" stroke-width="4" stroke-linecap="round"/></svg></div>
+    <div class="cloud c2" aria-hidden="true"><svg viewBox="0 0 120 70"><path d="M26 62Q4 62 7 45Q5 28 24 29Q25 10 46 13Q58 0 75 12Q95 7 97 28Q115 30 113 47Q113 62 95 62Z" fill="#fff" stroke="#2B2140" stroke-width="4" stroke-linejoin="round"/><path d="M22 40Q24 33 32 33M50 22Q55 17 62 19" fill="none" stroke="#DDEBFF" stroke-width="4" stroke-linecap="round"/></svg></div>
+    <div class="cloud c3" aria-hidden="true"><svg viewBox="0 0 120 70"><path d="M26 62Q4 62 7 45Q5 28 24 29Q25 10 46 13Q58 0 75 12Q95 7 97 28Q115 30 113 47Q113 62 95 62Z" fill="#fff" stroke="#2B2140" stroke-width="4" stroke-linejoin="round"/><path d="M22 40Q24 33 32 33M50 22Q55 17 62 19" fill="none" stroke="#DDEBFF" stroke-width="4" stroke-linecap="round"/></svg></div>
+
+    <div class="globe-holder" id="globeHolder">
+      <div class="globe-shadow" id="globeShadow"></div>
+      <div class="globe-bounce" id="globeBounce">
+        <div class="globe-wobble mood-idle" id="globeWobble">
+          <canvas id="globe" aria-label="Globus"></canvas>
+          <!-- Lice: koordinate su u sustavu gdje je globus krug polumjera 100 -->
+          <svg class="face" viewBox="-100 -100 200 200" aria-hidden="true">
+            <g class="idle">
+              <g class="blink">
+                <ellipse cx="-27" cy="-44" rx="11" ry="13" fill="#fff" stroke="#2B2140" stroke-width="4"/>
+                <ellipse cx="27" cy="-44" rx="11" ry="13" fill="#fff" stroke="#2B2140" stroke-width="4"/>
+                <circle cx="-25" cy="-41" r="5.5" fill="#2B2140"/><circle cx="29" cy="-41" r="5.5" fill="#2B2140"/>
+                <circle cx="-23" cy="-43" r="1.8" fill="#fff"/><circle cx="31" cy="-43" r="1.8" fill="#fff"/>
+              </g>
+              <path d="M-22 42Q0 62 22 42" fill="none" stroke="#2B2140" stroke-width="5" stroke-linecap="round"/>
+              <ellipse cx="-47" cy="30" rx="9" ry="5" fill="#FF7FA8" opacity=".6"/><ellipse cx="47" cy="30" rx="9" ry="5" fill="#FF7FA8" opacity=".6"/>
+            </g>
+            <g class="dizzy">
+              <circle cx="-27" cy="-44" r="13" fill="#fff" stroke="#2B2140" stroke-width="4"/>
+              <circle cx="27" cy="-44" r="13" fill="#fff" stroke="#2B2140" stroke-width="4"/>
+              <path class="swirl" d="M-27 -44a2 2 0 0 1 4 0a4 4 0 0 1-8 0a6 6 0 0 1 12 0a8 8 0 0 1-16 0" fill="none" stroke="#2B2140" stroke-width="2.6" stroke-linecap="round"/>
+              <path class="swirl" d="M27 -44a2 2 0 0 1 4 0a4 4 0 0 1-8 0a6 6 0 0 1 12 0a8 8 0 0 1-16 0" fill="none" stroke="#2B2140" stroke-width="2.6" stroke-linecap="round"/>
+              <path d="M-22 48q5.5-7 11 0t11 0t11 0t11 0" fill="none" stroke="#2B2140" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+            </g>
+            <g class="happy">
+              <path d="M-39 -40Q-27 -58 -15 -40M15 -40Q27 -58 39 -40" fill="none" stroke="#2B2140" stroke-width="6" stroke-linecap="round"/>
+              <path d="M-27 34Q0 76 27 34Z" fill="#8B2B4B" stroke="#2B2140" stroke-width="4" stroke-linejoin="round"/>
+              <ellipse cx="0" cy="49" rx="9" ry="5" fill="#FF7A9C"/>
+              <ellipse cx="-49" cy="24" rx="11" ry="6" fill="#FF7FA8" opacity=".75"/><ellipse cx="49" cy="24" rx="11" ry="6" fill="#FF7FA8" opacity=".75"/>
+            </g>
+          </svg>
+        </div>
+      </div>
+      <!-- Balon s imenom države i zastavom (iskoči kad globus stane) -->
+      <div class="balloon" id="balloon" aria-live="polite">
+        <div class="balloon-flag" id="balloonFlag"></div>
+        <div class="balloon-name" id="balloonName"></div>
+      </div>
+    </div>
+    <div class="loading" id="loading">Učitavam globus… 🌍</div>
+  </section>
+
+  <!-- ===== KARTICA JELA ===== -->
+  <section class="card-area" id="cardArea">
+    <div class="card placeholder" id="placeholderCard">
+      <div class="ph-icon" id="phIcon">❓</div>
+      <div class="ph-title" id="phTitle">Koje jelo te čeka?</div>
+      <div class="ph-text" id="phText">Pritisni <b>ZAVRTI!</b> i globus će odabrati državu.</div>
+    </div>
+    <article class="card dish" id="dishCard" hidden>
+      <div class="dish-head">
+        <div class="flag" id="cardFlag"></div>
+        <div>
+          <div class="dish-country" id="cardCountry"></div>
+          <div class="dish-label">nacionalno jelo</div>
+        </div>
+      </div>
+      <div class="dish-emoji"><span id="cardEmoji"></span></div>
+      <h2 class="dish-name" id="cardDish"></h2>
+      <div class="dish-orig" id="cardOrig"></div>
+      <p class="dish-desc" id="cardDesc"></p>
+      <div class="dish-actions hide-in-clean">
+        <button class="btn btn-green" id="btnDone">✅ Označi kao odrađeno</button>
+        <a class="btn" id="btnRecipe" target="_blank" rel="noopener">🔍 Recept</a>
+      </div>
+    </article>
+  </section>
+
+  <!-- ===== GLAVNI GUMB ===== -->
+  <footer class="controls">
+    <button class="btn btn-spin" id="btnSpin" disabled>ZAVRTI!</button>
+  </footer>
+
+  <canvas id="confetti" aria-hidden="true"></canvas>
+  <button class="exit-clean" id="exitClean" title="Izađi iz čistog prikaza (H)">✕</button>
+  <div class="toast" id="toast" role="status"></div>
+</div>
+
+<!-- ===== MODAL: ručni unos ===== -->
+<div class="modal" id="modalManual" hidden>
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="manualTitle">
+    <h3 id="manualTitle">📝 Ručni unos odrađenih država</h3>
+    <p>Kvačicom označi države čija si jela već napravio.</p>
+    <input class="search" id="manualSearch" type="search" placeholder="Traži državu ili jelo…" autocomplete="off">
+    <div class="chips" id="manualFilters">
+      <button class="chip active" data-f="all">Sve</button>
+      <button class="chip" data-f="done">Odrađene</button>
+      <button class="chip" data-f="todo">Neodrađene</button>
+      <span class="info" id="manualInfo"></span>
+    </div>
+    <ul class="country-list" id="manualList"></ul>
+    <div class="modal-actions"><button class="btn btn-green" id="manualClose">Gotovo 👍</button></div>
+  </div>
+</div>
+
+<!-- ===== MODAL: potvrda ===== -->
+<div class="modal" id="modalConfirm" hidden>
+  <div class="modal-box" role="alertdialog" aria-modal="true" style="width:min(440px,100%)">
+    <h3 id="confirmTitle">Jesi li siguran?</h3>
+    <p id="confirmText"></p>
+    <div class="modal-actions">
+      <button class="btn" id="confirmNo">Odustani</button>
+      <button class="btn btn-spin" style="font-size:18px;padding:10px 22px;letter-spacing:0;-webkit-text-stroke:0;text-shadow:none" id="confirmYes">Da, obriši</button>
+    </div>
+  </div>
+</div>
+
+<!-- Biblioteke s jsdelivr CDN-a -->
+<script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
+<script>
+"use strict";
+/* =====================================================================
+   POSTAVKE – sve što ćeš možda htjeti mijenjati je ovdje na jednom mjestu
+   ===================================================================== */
+const CONFIG = {
+  atlasUrl: "https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/countries-50m.json",
+  flagSvg:  iso2 => `https://flagcdn.com/${iso2}.svg`,        // zastava za balon/karticu
+  flagPng:  iso2 => `https://flagcdn.com/w640/${iso2}.png`,   // zastava kao "uzorak" na globusu
+
+  // Vrtnja
+  minDuration: 4400,      // ms – najkraće trajanje vrtnje
+  maxDuration: 5600,      // ms – najdulje trajanje vrtnje (zahtjev: 4–6 s)
+  minTurns: 3,            // najmanje punih okretaja
+  maxTurns: 5,            // najviše punih okretaja
+  easePower: 2.2,         // "jačina" usporavanja (veće = dulje sporo puzanje na kraju)
+  rampUp: 0.07,           // udio vremena za glatko ubrzanje na početku
+  idleSpeed: 5,           // °/s – lagana vrtnja globusa dok miruje (0 = isključeno)
+  clickEvery: 24,         // ° – razmak "zubaca" čegrtaljke (zvuk)
+
+  // Slijed nakon zaustavljanja (ms od trenutka kad globus stane)
+  flagFillAt: 350,        // država poprimi boje zastave
+  flagFillUntil: 2600,    // ...i vrati se u žutu
+  confettiAt: 1000,       // konfeti + "ta-da!"
+  cardAt: 1300,           // kartica jela uleti
+
+  // Izgled globusa
+  oceanTop: "#BFEFFF", oceanMid: "#86D4F5", oceanEdge: "#4FA9E6",
+  landColors: ["#FF8FAB","#7DDC9C","#B79CFF","#FFB26B","#C9E86A","#F5A3E6","#FF8A7A","#6FD9C9"],
+  otherLand: "#FFF1D0",   // ne-UN teritoriji (Grenland, Zapadna Sahara…)
+  iceColor: "#F3FAFF",    // Antarktika
+  doneColor: "#C4C1CC",   // "odrađene" države su sive
+  pickColor: "#FFE14D",   // odabrana država (žuta)
+  ink: "#2B2140",         // obrubi
+  coastWidth: 3.6,        // px – debljina obale (pri polumjeru globusa ~300 px)
+  borderWidth: 2.2,       // px – debljina granica između država
+  outlineWidth: 4.5,      // px – obrub cijelog globusa
+  smallAreaKm2: 12000,    // države manje od ovoga dobiju točkicu/pin
+  pinAreaKm2: 200000,     // države manje od ovoga nakon zaustavljanja dobiju i veliki pin
+  detailPx: [0.6, 1.0, 1.8], // px – preskakanje gustih točaka: miruje / sporo / brzo (glatkoća)
+};
+
+/* =====================================================================
+   PODACI O DRŽAVAMA – 193 članice UN-a + 2 države promatrača (Vatikan, Palestina) = 195
+   ---------------------------------------------------------------------
+   id      – numerički ISO 3166-1 kod (tako world-atlas označava države)
+   iso2    – dvoslovni ISO kod (za zastave s flagcdn.com i emoji zastave)
+   ime     – ime države na hrvatskom
+   jelo    – naziv jela na hrvatskom
+   izvorno – originalni naziv na lokalnom jeziku
+   emoji   – emoji koji najbolje predstavlja jelo
+   opis    – 1–2 rečenice: što je to i od čega se radi
+   pin     – (neobavezno) [dužina, širina] ako država ne postoji na karti
+   Emoji zastave se izračunava automatski iz iso2 (funkcija flagEmoji).
+   ===================================================================== */
+const COUNTRIES = [
+{id:"004",iso2:"af",ime:"Afganistan",jelo:"Kabulski pilav",izvorno:"Qabili palaw · قابلی پلو",emoji:"🍚",opis:"Riža kuhana s janjetinom, a zatim prekrivena prženom mrkvom i grožđicama. Začinjena je kardamomom i kuminom."},
+{id:"008",iso2:"al",ime:"Albanija",jelo:"Janjetina zapečena s jogurtom",izvorno:"Tavë kosi",emoji:"🍖",opis:"Pečena janjetina s rižom, zapečena pod gustim umakom od jogurta i jaja do zlatne korice."},
+{id:"012",iso2:"dz",ime:"Alžir",jelo:"Kuskus",izvorno:"Kesksu · كسكس",emoji:"🥘",opis:"Zrnca pšenične krupice kuhana na pari iznad mirisnog variva od povrća, slanutka i janjetine."},
+{id:"020",iso2:"ad",ime:"Andora",jelo:"Planinski gulaš s mesom",izvorno:"Escudella i carn d'olla",emoji:"🍲",opis:"Gusti zimski lonac s nekoliko vrsta mesa, kobasicama, slanutkom, povrćem i tjesteninom."},
+{id:"024",iso2:"ao",ime:"Angola",jelo:"Piletina u palminom umaku",izvorno:"Moamba de galinha",emoji:"🍗",opis:"Piletina kuhana u umaku od palminog ulja s bamijom, češnjakom i čilijem. Jede se uz funge, kašu od manioke."},
+{id:"028",iso2:"ag",ime:"Antigva i Barbuda",jelo:"Fungee i pepperpot",izvorno:"Fungee and pepperpot",emoji:"🍲",opis:"Kaša od kukuruznog brašna i bamije poslužena uz gusto varivo od mesa, špinata i povrća."},
+{id:"032",iso2:"ar",ime:"Argentina",jelo:"Asado (argentinski roštilj)",izvorno:"Asado",emoji:"🥩",opis:"Govedina, rebarca i kobasice polagano pečeni na žaru. Poslužuju se uz zeleni umak chimichurri."},
+{id:"051",iso2:"am",ime:"Armenija",jelo:"Harisa",izvorno:"Harissa · Հարիսա",emoji:"🥣",opis:"Gusta kaša od zrna pšenice i piletine ili janjetine koja se kuha satima dok ne postane glatka."},
+{id:"036",iso2:"au",ime:"Australija",jelo:"Mesna pita",izvorno:"Meat pie",emoji:"🥧",opis:"Mala pita od prhkog tijesta punjena mljevenom govedinom u gustom umaku, najčešće s kečapom."},
+{id:"040",iso2:"at",ime:"Austrija",jelo:"Bečki odrezak",izvorno:"Wiener Schnitzel",emoji:"🍖",opis:"Tanko istučen teleći odrezak pohan u krušnim mrvicama i pržen do zlatne boje. Poslužuje se s limunom i salatom od krumpira."},
+{id:"031",iso2:"az",ime:"Azerbajdžan",jelo:"Dolma",izvorno:"Dolma",emoji:"🫑",opis:"Listovi vinove loze ili povrće punjeni mljevenim mesom, rižom i začinskim biljem, posluženi s jogurtom."},
+{id:"044",iso2:"bs",ime:"Bahami",jelo:"Pohani morski puž",izvorno:"Cracked conch",emoji:"🐚",opis:"Istučeno meso velikog morskog puža (konha) pohano i prženo, uz limetu i ljuti umak."},
+{id:"048",iso2:"bh",ime:"Bahrein",jelo:"Slatka riža s ribom",izvorno:"Muhammar · محمر",emoji:"🍚",opis:"Riža kuhana sa sirupom od datulja, šafranom i kardamomom, a jede se uz prženu ili pečenu ribu."},
+{id:"050",iso2:"bd",ime:"Bangladeš",jelo:"Riba hilsa u umaku od gorušice",izvorno:"Shorshe ilish · সর্ষে ইলিশ",emoji:"🐟",opis:"Nacionalna riba hilsa kuhana u oštrom umaku od mljevene gorušice, kurkume i zelenog čilija, uz rižu."},
+{id:"052",iso2:"bb",ime:"Barbados",jelo:"Cou-cou i leteća riba",izvorno:"Cou-cou and flying fish",emoji:"🐟",opis:"Kremasta kaša od kukuruznog brašna i bamije uz leteću ribu pirjanu u začinjenom umaku od rajčice."},
+{id:"056",iso2:"be",ime:"Belgija",jelo:"Dagnje s pomfritom",izvorno:"Moules-frites",emoji:"🦪",opis:"Dagnje kuhane u bijelom vinu ili pivu s lukom i celerom, uz hrskavi dvaput prženi pomfrit."},
+{id:"084",iso2:"bz",ime:"Belize",jelo:"Riža s grahom i piletinom",izvorno:"Rice and beans",emoji:"🍛",opis:"Riža i crveni grah kuhani u kokosovom mlijeku, uz pirjanu piletinu i salatu od krumpira."},
+{id:"204",iso2:"bj",ime:"Benin",jelo:"Crvena kukuruzna kaša s piletinom",izvorno:"Amiwo",emoji:"🌽",opis:"Kukuruzno brašno kuhano u umaku od rajčice, luka i začina, a poslužuje se s piletinom ili ribom."},
+{id:"112",iso2:"by",ime:"Bjelorusija",jelo:"Draniki (krumpirove pogačice)",izvorno:"Дранікі",emoji:"🥔",opis:"Prženi palačinci od ribanog krumpira i luka, posluženi s kiselim vrhnjem."},
+{id:"072",iso2:"bw",ime:"Bocvana",jelo:"Seswaa",izvorno:"Seswaa",emoji:"🍖",opis:"Govedina kuhana satima sa soli pa istučena u niti. Jede se uz pap, gustu kukuruznu kašu."},
+{id:"068",iso2:"bo",ime:"Bolivija",jelo:"Salteña",izvorno:"Salteña",emoji:"🥟",opis:"Pečena pita punjena sočnim slatko-ljutim gulašem od mesa, krumpira, graška, jaja i maslina."},
+{id:"070",iso2:"ba",ime:"Bosna i Hercegovina",jelo:"Ćevapi",izvorno:"Ćevapi",emoji:"🥙",opis:"Male kobasice od mljevene govedine pečene na roštilju, u somunu s lukom i kajmakom."},
+{id:"076",iso2:"br",ime:"Brazil",jelo:"Feijoada",izvorno:"Feijoada",emoji:"🫘",opis:"Gusto varivo od crnog graha sa svinjetinom, govedinom i kobasicama, uz rižu, kelj i krišku naranče."},
+{id:"096",iso2:"bn",ime:"Brunej",jelo:"Ambuyat",izvorno:"Ambuyat",emoji:"🥣",opis:"Ljepljiva masa od škroba sago palme koja se namata na drvene štapiće i umače u kisele i ljute umake."},
+{id:"100",iso2:"bg",ime:"Bugarska",jelo:"Šopska salata",izvorno:"Шопска салата",emoji:"🥗",opis:"Salata od rajčica, krastavaca, pečene paprike i luka, bogato posuta ribanim bijelim sirom sirene."},
+{id:"854",iso2:"bf",ime:"Burkina Faso",jelo:"Masna riža",izvorno:"Riz gras",emoji:"🍚",opis:"Riža kuhana u bogatom umaku od rajčice, luka i ulja s mesom i povrćem."},
+{id:"108",iso2:"bi",ime:"Burundi",jelo:"Grah s bananama za kuhanje",izvorno:"Ibiharage",emoji:"🫘",opis:"Grah pirjan s lukom i palminim uljem, poslužen uz kuhane banane za kuhanje ili maniok."},
+{id:"064",iso2:"bt",ime:"Butan",jelo:"Čili u sirnom umaku",izvorno:"Ema datshi · ཨེ་མ་དར་ཚིལ",emoji:"🌶️",opis:"Ljute čili papričice kuhane u kremastom umaku od domaćeg sira. Jede se uz crvenu rižu."},
+{id:"196",iso2:"cy",ime:"Cipar",jelo:"Suvla",izvorno:"Souvla · Σούβλα",emoji:"🍢",opis:"Veliki komadi janjetine ili svinjetine pečeni satima na ražnju nad žarom drvenog ugljena."},
+{id:"499",iso2:"me",ime:"Crna Gora",jelo:"Kačamak",izvorno:"Kačamak",emoji:"🥣",opis:"Kaša od kukuruznog brašna i krumpira, umiješana s puno kajmaka i mladog sira."},
+{id:"148",iso2:"td",ime:"Čad",jelo:"Boule s umakom od bamije",izvorno:"Boule",emoji:"🥣",opis:"Gusta kaša od prosa ili kukuruza oblikovana u kuglu i poslužena uz umak od bamije ili mesa."},
+{id:"203",iso2:"cz",ime:"Češka",jelo:"Svíčková s knedlama",izvorno:"Svíčková na smetaně",emoji:"🥩",opis:"Pirjana govedina u kremastom umaku od korjenastog povrća i vrhnja, uz knedle i brusnice."},
+{id:"152",iso2:"cl",ime:"Čile",jelo:"Kukuruzna pita",izvorno:"Pastel de choclo",emoji:"🌽",opis:"Mljeveno meso, piletina, masline i jaje zapečeni pod slatkom korom od mljevenog kukuruza."},
+{id:"208",iso2:"dk",ime:"Danska",jelo:"Hrskava svinjetina s umakom od peršina",izvorno:"Stegt flæsk med persillesovs",emoji:"🥓",opis:"Hrskavo pržene ploške svinjske potrbušine uz kuhani krumpir i bijeli umak od peršina."},
+{id:"212",iso2:"dm",ime:"Dominika",jelo:"Callaloo",izvorno:"Callaloo",emoji:"🥬",opis:"Gusta zelena juha od listova taroa, kokosovog mlijeka, bamije i začina."},
+{id:"214",iso2:"do",ime:"Dominikanska Republika",jelo:"Dominikanska zastava",izvorno:"La bandera dominicana",emoji:"🍛",opis:"Svakodnevni ručak od bijele riže, pirjanog crvenog graha i pirjanog mesa, uz salatu."},
+{id:"262",iso2:"dj",ime:"Džibuti",jelo:"Začinjena riža s janjetinom",izvorno:"Skoudehkaris",emoji:"🍚",opis:"Riža kuhana s janjetinom, rajčicom, lukom i začinima poput kardamoma, cimeta i kumina."},
+{id:"818",iso2:"eg",ime:"Egipat",jelo:"Košari",izvorno:"Koshari · كشري",emoji:"🍝",opis:"Mješavina riže, smeđe leće, tjestenine i slanutka, prelivena umakom od rajčice s octom i prženim lukom."},
+{id:"218",iso2:"ec",ime:"Ekvador",jelo:"Riblja juha s lukom",izvorno:"Encebollado",emoji:"🐟",opis:"Juha od tune i manioke s ukiseljenim crvenim lukom i limetom, uz čips od banane."},
+{id:"226",iso2:"gq",ime:"Ekvatorska Gvineja",jelo:"Ljuta riblja juha",izvorno:"Pepesup",emoji:"🍲",opis:"Ljuta juha od ribe ili piletine s čilijem, lukom i rajčicom, uz maniok ili rižu."},
+{id:"232",iso2:"er",ime:"Eritreja",jelo:"Zigni s injerom",izvorno:"Zigni · ዝግኒ",emoji:"🍛",opis:"Ljuti gulaš od govedine u mješavini začina berbere, jede se kiselom palačinkom injerom."},
+{id:"233",iso2:"ee",ime:"Estonija",jelo:"Kaša od krumpira i ječma",izvorno:"Mulgipuder",emoji:"🥔",opis:"Pire od krumpira umiješan s ječmenom krupom, posut prženom slaninom i lukom."},
+{id:"748",iso2:"sz",ime:"Esvatini",jelo:"Kukuruzna kaša s mesom",izvorno:"Sishwala",emoji:"🥣",opis:"Gusta kaša od kukuruznog brašna, poslužena uz pirjano meso ili povrće."},
+{id:"231",iso2:"et",ime:"Etiopija",jelo:"Doro wat",izvorno:"Doro wat · ዶሮ ወጥ",emoji:"🍗",opis:"Ljuti pileći gulaš s tvrdo kuhanim jajima, začinjen berbereom. Jede se rukom uz injeru."},
+{id:"242",iso2:"fj",ime:"Fidži",jelo:"Kokoda",izvorno:"Kokoda",emoji:"🐟",opis:"Sirova riba marinirana u soku limete, a zatim pomiješana s kokosovim mlijekom, čilijem i povrćem."},
+{id:"608",iso2:"ph",ime:"Filipini",jelo:"Adobo",izvorno:"Adobo",emoji:"🍗",opis:"Piletina ili svinjetina pirjana u octu, umaku od soje, češnjaku, lovoru i papru, uz rižu."},
+{id:"246",iso2:"fi",ime:"Finska",jelo:"Karelijske pite",izvorno:"Karjalanpiirakka",emoji:"🥧",opis:"Tanke pite od raženog tijesta punjene rižinom kašom, mažu se maslacem s jajima."},
+{id:"250",iso2:"fr",ime:"Francuska",jelo:"Lonac na vatri",izvorno:"Pot-au-feu",emoji:"🍲",opis:"Govedina i korjenasto povrće polagano kuhani u bistroj juhi, uz senf i krupnu sol."},
+{id:"266",iso2:"ga",ime:"Gabon",jelo:"Piletina nyembwe",izvorno:"Poulet nyembwe",emoji:"🍗",opis:"Piletina kuhana u gustom umaku od palminih plodova, uz rižu ili banane za kuhanje."},
+{id:"270",iso2:"gm",ime:"Gambija",jelo:"Domoda",izvorno:"Domoda",emoji:"🥜",opis:"Gulaš od mesa u gustom umaku od kikirikija i rajčice, poslužen uz rižu."},
+{id:"288",iso2:"gh",ime:"Gana",jelo:"Fufu s laganom juhom",izvorno:"Fufu and light soup",emoji:"🥣",opis:"Kugla od tučene manioke i banane za kuhanje, uz ljutu juhu od rajčice s mesom ili ribom."},
+{id:"300",iso2:"gr",ime:"Grčka",jelo:"Musaka",izvorno:"Mousakás · Μουσακάς",emoji:"🍆",opis:"Slojevi pečenog patlidžana, mljevenog mesa u umaku od rajčice i bešamela, zapečeni u pećnici."},
+{id:"308",iso2:"gd",ime:"Grenada",jelo:"Oil down",izvorno:"Oil down",emoji:"🍲",opis:"Lonac krušnog ploda, usoljenog mesa, povrća i začina kuhan u kokosovom mlijeku dok ga potpuno ne upije."},
+{id:"268",iso2:"ge",ime:"Gruzija",jelo:"Hačapuri",izvorno:"Khachapuri · ხაჭაპური",emoji:"🧀",opis:"Kruh u obliku čamca punjen rastopljenim sirom, s maslacem i žumanjkom na vrhu."},
+{id:"328",iso2:"gy",ime:"Gvajana",jelo:"Pepperpot",izvorno:"Pepperpot",emoji:"🍲",opis:"Tamni gulaš od mesa kuhan u cassareepu, umaku od soka manioke, s cimetom i čilijem."},
+{id:"320",iso2:"gt",ime:"Gvatemala",jelo:"Pepián",izvorno:"Pepián",emoji:"🍲",opis:"Gusti gulaš od piletine i povrća u umaku od prženih sjemenki bundeve i sezama, čilija i rajčice."},
+{id:"324",iso2:"gn",ime:"Gvineja",jelo:"Piletina yassa",izvorno:"Poulet yassa",emoji:"🍗",opis:"Piletina marinirana u limunu i puno luka, pa pečena i pirjana u kiselkastom umaku, uz rižu."},
+{id:"624",iso2:"gw",ime:"Gvineja Bisau",jelo:"Juha od kikirikija",izvorno:"Caldo de mancarra",emoji:"🥜",opis:"Piletina ili riba kuhana u gustom umaku od kikirikija, uz bijelu rižu."},
+{id:"332",iso2:"ht",ime:"Haiti",jelo:"Griot",izvorno:"Griot",emoji:"🍖",opis:"Komadi svinjetine marinirani u citrusima, kuhani pa prženi do hrskavosti, uz ljuti kiseli kupus pikliz."},
+{id:"340",iso2:"hn",ime:"Honduras",jelo:"Baleada",izvorno:"Baleada",emoji:"🌯",opis:"Mekana tortilja od pšeničnog brašna punjena pasiranim grahom, sirom i kiselim vrhnjem."},
+{id:"191",iso2:"hr",ime:"Hrvatska",jelo:"Peka",izvorno:"Peka",emoji:"🍖",opis:"Janjetina, teletina ili hobotnica s krumpirom, pečene pod željeznim zvonom zatrpanim žarom."},
+{id:"356",iso2:"in",ime:"Indija",jelo:"Biryani",izvorno:"Biryani · बिरयानी",emoji:"🍛",opis:"Mirisna riža basmati kuhana u slojevima s mesom i začinima poput šafrana, kardamoma i klinčića."},
+{id:"360",iso2:"id",ime:"Indonezija",jelo:"Pržena riža",izvorno:"Nasi goreng",emoji:"🍳",opis:"Riža pržena sa slatkim umakom od soje, češnjakom i čilijem, uz prženo jaje i kozice ili piletinu."},
+{id:"368",iso2:"iq",ime:"Irak",jelo:"Masguf",izvorno:"Masgouf · مسكوف",emoji:"🐟",opis:"Šaran rasječen po leđima i polagano pečen uz vatru, premazan tamarindom i kurkumom."},
+{id:"364",iso2:"ir",ime:"Iran",jelo:"Čelo kebab",izvorno:"Chelow kabab · چلوکباب",emoji:"🍢",opis:"Ražnjići od mljevene janjetine ili govedine uz šafransku rižu, pečenu rajčicu i maslac."},
+{id:"372",iso2:"ie",ime:"Irska",jelo:"Irski gulaš",izvorno:"Stobhach Gaelach (Irish stew)",emoji:"🍲",opis:"Janjetina, krumpir, luk i mrkva polagano kuhani u gustom, jednostavnom varivu."},
+{id:"352",iso2:"is",ime:"Island",jelo:"Janjeća juha",izvorno:"Kjötsúpa",emoji:"🍲",opis:"Topla juha od janjetine s korjenastim povrćem, krumpirom i malo riže ili zobi."},
+{id:"626",iso2:"tl",ime:"Istočni Timor",jelo:"Varivo od kukuruza i graha",izvorno:"Batar daan",emoji:"🌽",opis:"Kukuruz, grah i bundeva polagano kuhani s lukom i češnjakom u gusto varivo."},
+{id:"380",iso2:"it",ime:"Italija",jelo:"Pizza Margherita",izvorno:"Pizza Margherita",emoji:"🍕",opis:"Tanko tijesto s rajčicom, mozzarellom i bosiljkom, pečeno u krušnoj peći na drva."},
+{id:"376",iso2:"il",ime:"Izrael",jelo:"Falafel",izvorno:"Falafel · פלאפל",emoji:"🧆",opis:"Pržene kuglice od mljevenog slanutka i začinskog bilja, u piti s humusom, tahinijem i salatom."},
+{id:"388",iso2:"jm",ime:"Jamajka",jelo:"Ackee sa slanom ribom",izvorno:"Ackee and saltfish",emoji:"🐟",opis:"Voće ackee pirjano s usoljenim bakalarom, lukom, rajčicom i ljutom paprikom."},
+{id:"392",iso2:"jp",ime:"Japan",jelo:"Suši",izvorno:"Sushi · 寿司",emoji:"🍣",opis:"Riža začinjena rižinim octom uz sirovu ribu, morske plodove ili povrće, često zamotana u algu nori."},
+{id:"887",iso2:"ye",ime:"Jemen",jelo:"Salta",izvorno:"Saltah · سلتة",emoji:"🍲",opis:"Ključajući gulaš od mesa i povrća s pjenom od piskavice, jede se vruć uz somun."},
+{id:"400",iso2:"jo",ime:"Jordan",jelo:"Mansaf",izvorno:"Mansaf · منسف",emoji:"🍖",opis:"Janjetina kuhana u umaku od fermentiranog jogurta jameed, poslužena na riži s bademima i pinjolima."},
+{id:"410",iso2:"kr",ime:"Južna Koreja",jelo:"Bibimbap",izvorno:"Bibimbap · 비빔밥",emoji:"🍲",opis:"Zdjela riže s povrćem, govedinom, jajem i ljutom pastom gochujang koje se sve izmiješa prije jela."},
+{id:"728",iso2:"ss",ime:"Južni Sudan",jelo:"Kisra s gulašem",izvorno:"Kisra",emoji:"🫓",opis:"Tanka fermentirana palačinka od sirka, poslužena uz gulaš od mesa ili bamije."},
+{id:"710",iso2:"za",ime:"Južnoafrička Republika",jelo:"Bobotie",izvorno:"Bobotie",emoji:"🥘",opis:"Zapečeno mljeveno meso začinjeno curryjem i grožđicama, prekriveno kremom od jaja i mlijeka."},
+{id:"116",iso2:"kh",ime:"Kambodža",jelo:"Riblji amok",izvorno:"Amok trey · អាម៉ុកត្រី",emoji:"🐟",opis:"Riba kuhana na pari u kremi od kokosovog mlijeka, limunske trave i začina, u košarici od lista banane."},
+{id:"120",iso2:"cm",ime:"Kamerun",jelo:"Ndolé",izvorno:"Ndolé",emoji:"🥬",opis:"Varivo od gorkastog lišća ndolé s mljevenim kikirikijem i govedinom ili kozicama."},
+{id:"124",iso2:"ca",ime:"Kanada",jelo:"Poutine",izvorno:"Poutine",emoji:"🍟",opis:"Pomfrit preliven vrućim smeđim umakom i komadićima svježeg sira koji škripi pod zubima."},
+{id:"634",iso2:"qa",ime:"Katar",jelo:"Harees",izvorno:"Harees · هريس",emoji:"🥣",opis:"Pšenica i meso kuhani satima pa istučeni u glatku kašu, preliveni rastopljenim maslacem."},
+{id:"398",iso2:"kz",ime:"Kazahstan",jelo:"Bešbarmak",izvorno:"Beşbarmaq · Бешбармақ",emoji:"🍖",opis:"Kuhana konjetina ili janjetina na širokim domaćim rezancima s lukom, uz šalicu juhe."},
+{id:"404",iso2:"ke",ime:"Kenija",jelo:"Ugali i sukuma wiki",izvorno:"Ugali na sukuma wiki",emoji:"🥬",opis:"Čvrsta kukuruzna kaša uz kelj pirjan s lukom i rajčicom, često i s pečenim mesom."},
+{id:"156",iso2:"cn",ime:"Kina",jelo:"Pekinška patka",izvorno:"Běijīng kǎoyā · 北京烤鸭",emoji:"🦆",opis:"Pečena patka hrskave kože, narezana i zamotana u tanke palačinke s mladim lukom i slatkim umakom."},
+{id:"417",iso2:"kg",ime:"Kirgistan",jelo:"Lagman",izvorno:"Лагман",emoji:"🍜",opis:"Ručno razvučeni rezanci s janjetinom, paprikom i rajčicom u gustom, začinjenom umaku."},
+{id:"296",iso2:"ki",ime:"Kiribati",jelo:"Babai s kokosom",izvorno:"Te babai",emoji:"🥥",opis:"Gomolj divovskog močvarnog taroa kuhan i pirjan s kokosovom kremom, tradicionalno jelo za svečanosti."},
+{id:"170",iso2:"co",ime:"Kolumbija",jelo:"Bandeja paisa",izvorno:"Bandeja paisa",emoji:"🍳",opis:"Obilan tanjur graha, riže, mljevenog mesa, hrskave slanine, kobasice, jajeta, banane i avokada."},
+{id:"174",iso2:"km",ime:"Komori",jelo:"Jastog u umaku od vanilije",izvorno:"Langouste à la vanille",emoji:"🦞",opis:"Jastog kuhan u kremastom umaku od vanilije koja raste na otocima, uz rižu."},
+{id:"178",iso2:"cg",ime:"Kongo",jelo:"Piletina moambé",izvorno:"Poulet moambé",emoji:"🍗",opis:"Piletina pirjana u umaku od palminih plodova s rajčicom i čilijem, uz rižu ili maniok."},
+{id:"180",iso2:"cd",ime:"DR Kongo",jelo:"Pondu",izvorno:"Pondu (saka-saka)",emoji:"🥬",opis:"Mljeveno lišće manioke dugo kuhano s palminim uljem, lukom, patlidžanom i sušenom ribom."},
+{id:"188",iso2:"cr",ime:"Kostarika",jelo:"Gallo pinto",izvorno:"Gallo pinto",emoji:"🍛",opis:"Riža i crni grah prženi s lukom, paprikom i korijandrom. Najčešće se jede za doručak uz jaja."},
+{id:"192",iso2:"cu",ime:"Kuba",jelo:"Stara odjeća",izvorno:"Ropa vieja",emoji:"🍛",opis:"Govedina natrgana u niti i pirjana u umaku od rajčice i paprike, uz rižu i crni grah."},
+{id:"414",iso2:"kw",ime:"Kuvajt",jelo:"Riba na začinjenoj riži",izvorno:"Mutabbaq samak · مطبق سمك",emoji:"🐟",opis:"Pržena riba, najčešće zubatac, poslužena na riži kuhanoj s lukom, sušenim limunom i baharatom."},
+{id:"418",iso2:"la",ime:"Laos",jelo:"Larb",izvorno:"Larb · ລາບ",emoji:"🥗",opis:"Topla salata od mljevenog mesa ili ribe s limetom, ribljim umakom, mentom i prženom rižom, uz ljepljivu rižu."},
+{id:"428",iso2:"lv",ime:"Latvija",jelo:"Sivi grašak sa slaninom",izvorno:"Pelēkie zirņi ar speķi",emoji:"🫘",opis:"Krupni sivi grašak pržen s dimljenom slaninom i lukom, a pije se uz kefir."},
+{id:"426",iso2:"ls",ime:"Lesoto",jelo:"Papa i moroho",izvorno:"Papa le moroho",emoji:"🥬",opis:"Gusta kukuruzna kaša poslužena uz kuhano zeleno lisnato povrće s lukom."},
+{id:"422",iso2:"lb",ime:"Libanon",jelo:"Tabule",izvorno:"Tabbouleh · تبولة",emoji:"🥗",opis:"Svježa salata od sitno sjeckanog peršina, bulgura, rajčice i mente s limunom i maslinovim uljem."},
+{id:"430",iso2:"lr",ime:"Liberija",jelo:"Juha od palminog maslaca",izvorno:"Palm butter soup",emoji:"🍲",opis:"Gusta juha od kuhanih palminih plodova s mesom ili ribom, poslužena preko riže."},
+{id:"434",iso2:"ly",ime:"Libija",jelo:"Bazin",izvorno:"Bazeen · بازين",emoji:"🥣",opis:"Kupola od tijesta od ječmenog brašna okružena gulašem od janjetine, rajčice, krumpira i jaja."},
+{id:"438",iso2:"li",ime:"Lihtenštajn",jelo:"Sirni rezanci",izvorno:"Käsknöpfle",emoji:"🧀",opis:"Mali rezanci od jaja izmiješani s puno sira i preliveni prženim lukom, uz kompot od jabuka."},
+{id:"440",iso2:"lt",ime:"Litva",jelo:"Cepelini",izvorno:"Cepelinai",emoji:"🥟",opis:"Velike knedle od krumpira punjene mljevenim mesom, prelivene kiselim vrhnjem i čvarcima."},
+{id:"442",iso2:"lu",ime:"Luksemburg",jelo:"Dimljeni svinjski vrat s bobom",izvorno:"Judd mat Gaardebounen",emoji:"🥓",opis:"Dimljeni svinjski vrat kuhan s povrćem, uz bob u kremastom umaku i kuhani krumpir."},
+{id:"450",iso2:"mg",ime:"Madagaskar",jelo:"Romazava",izvorno:"Romazava",emoji:"🍲",opis:"Gulaš od govedine i lisnatog povrća s lišćem koje lagano trnči jezik, poslužen uz rižu."},
+{id:"348",iso2:"hu",ime:"Mađarska",jelo:"Gulaš",izvorno:"Gulyásleves",emoji:"🍲",opis:"Gusta juha od govedine, krumpira i luka, bogato začinjena slatkom mađarskom paprikom."},
+{id:"454",iso2:"mw",ime:"Malavi",jelo:"Nsima s ribom chambo",izvorno:"Nsima",emoji:"🐟",opis:"Gusta kukuruzna kaša koja se jede rukom, uz pečenu ribu chambo iz jezera Malavi i povrće."},
+{id:"462",iso2:"mv",ime:"Maldivi",jelo:"Garudija",izvorno:"Garudhiya",emoji:"🐟",opis:"Bistra juha od tune s limetom, čilijem i lukom, poslužena uz rižu."},
+{id:"458",iso2:"my",ime:"Malezija",jelo:"Nasi lemak",izvorno:"Nasi lemak",emoji:"🍚",opis:"Riža kuhana u kokosovom mlijeku s listom pandana, uz ljuti sambal, inćune, kikiriki, krastavac i jaje."},
+{id:"466",iso2:"ml",ime:"Mali",jelo:"Mafé (gulaš od kikirikija)",izvorno:"Tiguadège na (mafé)",emoji:"🥜",opis:"Meso kuhano u gustom umaku od kikirikija i rajčice s povrćem, uz rižu."},
+{id:"470",iso2:"mt",ime:"Malta",jelo:"Pirjani zec",izvorno:"Stuffat tal-fenek",emoji:"🐇",opis:"Zec polagano pirjan u crnom vinu s rajčicom, češnjakom i lovorom, često uz špagete."},
+{id:"504",iso2:"ma",ime:"Maroko",jelo:"Tažin",izvorno:"Tajine · طاجين",emoji:"🍲",opis:"Piletina ili janjetina polagano kuhana s povrćem, maslinama i ukiseljenim limunom u glinenoj posudi stožastog poklopca."},
+{id:"584",iso2:"mh",ime:"Maršalovi Otoci",jelo:"Fermentirani krušni plod",izvorno:"Bwiro",emoji:"🥥",opis:"Pasta od fermentiranog krušnog ploda zamotana u lišće i pečena. Tradicionalna hrana koja se dugo čuva."},
+{id:"480",iso2:"mu",ime:"Mauricijus",jelo:"Dholl puri",izvorno:"Dholl puri",emoji:"🫓",opis:"Tanki mekani kruščići punjeni mljevenim žutim graškom, uz curry od graha i chutney."},
+{id:"478",iso2:"mr",ime:"Mauritanija",jelo:"Mešui",izvorno:"Méchoui",emoji:"🍖",opis:"Cijelo janje polagano pečeno na žaru, začinjeno kuminom i solju, a jede se rukama."},
+{id:"484",iso2:"mx",ime:"Meksiko",jelo:"Mole poblano",izvorno:"Mole poblano",emoji:"🌶️",opis:"Piletina u tamnom, gustom umaku od više vrsta čilija, začina, orašastih plodova i čokolade."},
+{id:"583",iso2:"fm",ime:"Mikronezija",jelo:"Krušni plod u kokosovom mlijeku",izvorno:"Breadfruit in coconut milk",emoji:"🥥",opis:"Krušni plod kuhan ili pečen pa preliven kokosovim mlijekom, poslužen uz ribu."},
+{id:"104",iso2:"mm",ime:"Mjanmar",jelo:"Mohinga",izvorno:"Mohinga · မုန့်ဟင်းခါး",emoji:"🍜",opis:"Juha od rižinih rezanaca i ribe s limunskom travom i srcem banane, najčešće za doručak."},
+{id:"498",iso2:"md",ime:"Moldavija",jelo:"Mamaliga",izvorno:"Mămăligă",emoji:"🌽",opis:"Gusta kaša od kukuruznog brašna uz ovčji sir, kiselo vrhnje i čvarke."},
+{id:"492",iso2:"mc",ime:"Monako",jelo:"Barbagiuan",izvorno:"Barbagiuan",emoji:"🥟",opis:"Prženi pirošci punjeni blitvom, rižom, porilukom i sirom – tipična grickalica za nacionalni praznik."},
+{id:"496",iso2:"mn",ime:"Mongolija",jelo:"Buuz",izvorno:"Бууз",emoji:"🥟",opis:"Knedlice od tijesta punjene mljevenom ovčetinom ili govedinom s lukom, kuhane na pari."},
+{id:"508",iso2:"mz",ime:"Mozambik",jelo:"Matapa",izvorno:"Matapa",emoji:"🥬",opis:"Mljeveno lišće manioke kuhano s kikirikijem, kokosovim mlijekom i rakovima ili kozicama."},
+{id:"516",iso2:"na",ime:"Namibija",jelo:"Kapana",izvorno:"Kapana",emoji:"🥩",opis:"Komadići govedine pečeni na uličnom roštilju i umočeni u ljutu mješavinu začina, uz rajčicu i luk."},
+{id:"520",iso2:"nr",ime:"Nauru",jelo:"Kokosova riba",izvorno:"Coconut fish",emoji:"🐟",opis:"Svježa riba kuhana ili pečena u kokosovom mlijeku s lukom, poslužena uz rižu."},
+{id:"524",iso2:"np",ime:"Nepal",jelo:"Dal bhat",izvorno:"Dal bhat · दाल भात",emoji:"🍛",opis:"Gusta juha od leće (dal) uz rižu (bhat), povrtni curry i kisele dodatke – jede se gotovo svaki dan."},
+{id:"562",iso2:"ne",ime:"Niger",jelo:"Dambou",izvorno:"Dambou",emoji:"🥬",opis:"Kuskus od prosa ili riže kuhan na pari s listovima moringe, kikirikijem i lukom."},
+{id:"566",iso2:"ng",ime:"Nigerija",jelo:"Jollof riža",izvorno:"Jollof rice",emoji:"🍚",opis:"Riža kuhana u začinjenom umaku od rajčice, crvene paprike i luka, uz pečenu piletinu i banane."},
+{id:"558",iso2:"ni",ime:"Nikaragva",jelo:"Vigorón",izvorno:"Vigorón",emoji:"🍖",opis:"Kuhana manioka s hrskavim čvarcima i salatom od kupusa, poslužena na listu banane."},
+{id:"528",iso2:"nl",ime:"Nizozemska",jelo:"Stamppot",izvorno:"Stamppot",emoji:"🥔",opis:"Pire od krumpira izmiješan s povrćem poput kelja ili kiselog kupusa, uz dimljenu kobasicu."},
+{id:"276",iso2:"de",ime:"Njemačka",jelo:"Kiselo pečenje",izvorno:"Sauerbraten",emoji:"🥩",opis:"Govedina marinirana danima u octu, vinu i začinima, pa pirjana i poslužena s knedlama i crvenim kupusom."},
+{id:"578",iso2:"no",ime:"Norveška",jelo:"Janjetina s kupusom",izvorno:"Fårikål",emoji:"🥬",opis:"Janjetina i kupus kuhani u slojevima s cijelim zrnima crnog papra, uz kuhani krumpir."},
+{id:"554",iso2:"nz",ime:"Novi Zeland",jelo:"Hangi",izvorno:"Hāngī",emoji:"🍖",opis:"Meso i povrće pečeni satima u zemljanoj jami na užarenom kamenju – maorska tradicija."},
+{id:"384",iso2:"ci",ime:"Obala Bjelokosti",jelo:"Attiéké s ribom",izvorno:"Attiéké",emoji:"🐟",opis:"Fermentirana ribana manioka nalik kuskusu, uz pečenu ribu, luk, rajčicu i ljuti umak."},
+{id:"512",iso2:"om",ime:"Oman",jelo:"Šuva",izvorno:"Shuwa · شواء",emoji:"🍖",opis:"Janjetina premazana začinima, zamotana u lišće i pečena u podzemnoj jami i do dva dana."},
+{id:"586",iso2:"pk",ime:"Pakistan",jelo:"Nihari",izvorno:"Nihari · نہاری",emoji:"🍲",opis:"Gusti gulaš od govedine kuhan preko noći s đumbirom i garam masalom, uz somun naan."},
+{id:"585",iso2:"pw",ime:"Palau",jelo:"Taro s ribom",izvorno:"Taro and fish",emoji:"🐟",opis:"Kuhani gomolj taroa, osnovna namirnica otoka, uz pečenu ili sirovu svježu ribu i kokos."},
+{id:"275",iso2:"ps",ime:"Palestina",jelo:"Musakhan",izvorno:"Musakhan · مسخن",emoji:"🍗",opis:"Pečena piletina s puno luka pirjanog u maslinovom ulju, sumakom i pinjolima, na kruhu taboon."},
+{id:"591",iso2:"pa",ime:"Panama",jelo:"Sancocho",izvorno:"Sancocho panameño",emoji:"🍲",opis:"Pileća juha s jamom, kukuruzom i začinskim biljem culantro, poslužena uz bijelu rižu."},
+{id:"598",iso2:"pg",ime:"Papua Nova Gvineja",jelo:"Mumu",izvorno:"Mumu",emoji:"🍖",opis:"Svinjetina, slatki krumpir i povrće pečeni na užarenom kamenju u zemljanoj jami, s kokosovim mlijekom."},
+{id:"600",iso2:"py",ime:"Paragvaj",jelo:"Paragvajska juha",izvorno:"Sopa paraguaya",emoji:"🌽",opis:"Unatoč imenu, to je čvrsti zapečeni kukuruzni kruh sa sirom, lukom i mlijekom."},
+{id:"604",iso2:"pe",ime:"Peru",jelo:"Ceviche",izvorno:"Cebiche",emoji:"🐟",opis:"Sirova riba marinirana u soku limete s crvenim lukom i čilijem, uz slatki krumpir i kukuruz."},
+{id:"616",iso2:"pl",ime:"Poljska",jelo:"Pierogi",izvorno:"Pierogi",emoji:"🥟",opis:"Polukružne knedle punjene krumpirom i sirom, mesom ili kupusom, prelivene prženim lukom."},
+{id:"620",iso2:"pt",ime:"Portugal",jelo:"Bakalar na Brás",izvorno:"Bacalhau à Brás",emoji:"🐟",opis:"Usoljeni bakalar izmiješan s tankim prženim krumpirićima, lukom i jajima, posut maslinama."},
+{id:"646",iso2:"rw",ime:"Ruanda",jelo:"Isombe",izvorno:"Isombe",emoji:"🥬",opis:"Mljeveno lišće manioke kuhano s patlidžanom, lukom i pastom od kikirikija."},
+{id:"642",iso2:"ro",ime:"Rumunjska",jelo:"Sarme",izvorno:"Sarmale",emoji:"🥬",opis:"Listovi kiselog kupusa punjeni mljevenim mesom i rižom, uz palentu i kiselo vrhnje."},
+{id:"643",iso2:"ru",ime:"Rusija",jelo:"Peljmeni",izvorno:"Pelmeni · Пельмени",emoji:"🥟",opis:"Male knedlice od tankog tijesta punjene mljevenim mesom, poslužene s kiselim vrhnjem."},
+{id:"090",iso2:"sb",ime:"Salomonski Otoci",jelo:"Riba u kokosovom mlijeku",izvorno:"Fish in coconut milk",emoji:"🐟",opis:"Svježa riba kuhana u kokosovom mlijeku sa zelenim povrćem, uz taro ili slatki krumpir."},
+{id:"222",iso2:"sv",ime:"Salvador",jelo:"Pupusa",izvorno:"Pupusa",emoji:"🫓",opis:"Debela kukuruzna tortilja punjena sirom, grahom ili svinjetinom, uz kiseli kupus curtido."},
+{id:"882",iso2:"ws",ime:"Samoa",jelo:"Palusami",izvorno:"Palusami",emoji:"🥥",opis:"Mladi listovi taroa punjeni kokosovom kremom i lukom, pečeni u zemljanoj peći umu."},
+{id:"674",iso2:"sm",ime:"San Marino",jelo:"Lastavičja gnijezda",izvorno:"Nidi di rondine",emoji:"🍝",opis:"Smotuljci tjestenine sa šunkom i sirom, zapečeni u umaku od rajčice i bešamela."},
+{id:"682",iso2:"sa",ime:"Saudijska Arabija",jelo:"Kabsa",izvorno:"Kabsa · كبسة",emoji:"🍚",opis:"Mirisna riža s piletinom ili janjetinom, sušenim limunom, grožđicama i prženim bademima."},
+{id:"690",iso2:"sc",ime:"Sejšeli",jelo:"Curry od hobotnice",izvorno:"Kari zourit",emoji:"🐙",opis:"Hobotnica kuhana u kremastom kokosovom curryju s cimetom, kurkumom i češnjakom."},
+{id:"686",iso2:"sn",ime:"Senegal",jelo:"Riba s rižom",izvorno:"Thiéboudienne · Ceebu jën",emoji:"🐟",opis:"Riba i riža kuhani u umaku od rajčice s kupusom, mrkvom, maniokom i patlidžanom."},
+{id:"694",iso2:"sl",ime:"Sijera Leone",jelo:"Gulaš od lišća manioke",izvorno:"Cassava leaf stew",emoji:"🥬",opis:"Mljeveno lišće manioke kuhano s palminim uljem, lukom i mesom ili ribom, uz rižu."},
+{id:"702",iso2:"sg",ime:"Singapur",jelo:"Hainanska piletina s rižom",izvorno:"Hainanese chicken rice",emoji:"🍗",opis:"Nježno kuhana piletina uz rižu kuhanu u pilećem temeljcu, s umakom od čilija i đumbira."},
+{id:"760",iso2:"sy",ime:"Sirija",jelo:"Kibe",izvorno:"Kibbeh · كبة",emoji:"🧆",opis:"Hrskave kroketice od bulgura i mljevene janjetine punjene mesom, lukom i pinjolima."},
+{id:"840",iso2:"us",ime:"Sjedinjene Američke Države",jelo:"Hamburger",izvorno:"Hamburger",emoji:"🍔",opis:"Pljeskavica od mljevene govedine u mekanom pecivu sa sirom, salatom, rajčicom i umacima."},
+{id:"408",iso2:"kp",ime:"Sjeverna Koreja",jelo:"Hladni rezanci",izvorno:"Raengmyŏn · 랭면",emoji:"🍜",opis:"Rezanci od heljde u ledeno hladnoj juhi, s kruškom, krastavcem, jajetom i ploškama govedine."},
+{id:"807",iso2:"mk",ime:"Sjeverna Makedonija",jelo:"Tavče gravče",izvorno:"Тавче гравче",emoji:"🫘",opis:"Grah zapečen u glinenoj posudi s lukom, paprikom i ljutom crvenom paprikom."},
+{id:"703",iso2:"sk",ime:"Slovačka",jelo:"Halušky s bryndzom",izvorno:"Bryndzové halušky",emoji:"🧀",opis:"Male knedle od krumpira izmiješane s mekim ovčjim sirom bryndza i posute hrskavom slaninom."},
+{id:"705",iso2:"si",ime:"Slovenija",jelo:"Kranjska kobasica",izvorno:"Kranjska klobasa",emoji:"🌭",opis:"Dimljena svinjska kobasica s češnjakom i paprom, uz kiseli kupus, senf i hren."},
+{id:"706",iso2:"so",ime:"Somalija",jelo:"Začinjena riža",izvorno:"Bariis iskukaris",emoji:"🍚",opis:"Mirisna riža s kuminom, kardamomom, cimetom i grožđicama, uz janjetinu ili kozletinu i bananu."},
+{id:"688",iso2:"rs",ime:"Srbija",jelo:"Pljeskavica",izvorno:"Pljeskavica · Пљескавица",emoji:"🍔",opis:"Velika pljeskavica od mljevenog mesa s roštilja, u lepinji s lukom, kajmakom i ajvarom."},
+{id:"140",iso2:"cf",ime:"Srednjoafrička Republika",jelo:"Gozo s umakom od kikirikija",izvorno:"Gozo",emoji:"🥜",opis:"Ljepljiva kaša od manioke poslužena uz gusti umak od kikirikija s mesom ili povrćem."},
+{id:"729",iso2:"sd",ime:"Sudan",jelo:"Ful medames",izvorno:"Ful medames · فول مدمس",emoji:"🫘",opis:"Kuhani bob zgnječen s maslinovim uljem, kuminom, češnjakom i limunom, uz kruh."},
+{id:"740",iso2:"sr",ime:"Surinam",jelo:"Pom",izvorno:"Pom",emoji:"🥘",opis:"Zapečeno jelo od ribanog gomolja pomtajer, piletine i citrusa – obavezno na proslavama."},
+{id:"662",iso2:"lc",ime:"Sveta Lucija",jelo:"Zelene smokve i slana riba",izvorno:"Green fig and saltfish",emoji:"🍌",opis:"Kuhane nezrele banane (koje zovu \"zelene smokve\") uz pirjani usoljeni bakalar s lukom i paprikom."},
+{id:"659",iso2:"kn",ime:"Sveti Kristofor i Nevis",jelo:"Pirjana slana riba",izvorno:"Stewed saltfish",emoji:"🐟",opis:"Usoljeni bakalar pirjan s rajčicom i lukom, uz kokosove okruglice, krušni plod i zelene banane."},
+{id:"678",iso2:"st",ime:"Sveti Toma i Princip",jelo:"Calulu",izvorno:"Calulu",emoji:"🐟",opis:"Gulaš od dimljene ribe ili piletine s bamijom, patlidžanom, palminim uljem i lokalnim biljem."},
+{id:"670",iso2:"vc",ime:"Sveti Vincent i Grenadini",jelo:"Pečeni krušni plod i pržena riba",izvorno:"Roasted breadfruit and fried jackfish",emoji:"🐟",opis:"Krušni plod pečen na vatri uz hrskavo prženu ribu i začinjeni umak."},
+{id:"144",iso2:"lk",ime:"Šri Lanka",jelo:"Riža i curry",izvorno:"Bath curry · බත් කරි",emoji:"🍛",opis:"Riža uz nekoliko različitih curryja od povrća, ribe ili mesa i pikantni kokosov sambol."},
+{id:"724",iso2:"es",ime:"Španjolska",jelo:"Paella",izvorno:"Paella",emoji:"🥘",opis:"Riža kuhana sa šafranom u širokoj plitkoj tavi, s piletinom, zečetinom i mahunama ili plodovima mora."},
+{id:"752",iso2:"se",ime:"Švedska",jelo:"Švedske mesne okruglice",izvorno:"Köttbullar",emoji:"🧆",opis:"Mesne okruglice u kremastom umaku, uz pire krumpir, pekmez od brusnica i ukiseljene krastavce."},
+{id:"756",iso2:"ch",ime:"Švicarska",jelo:"Fondue od sira",izvorno:"Fondue",emoji:"🫕",opis:"Rastopljeni sir s bijelim vinom u zajedničkom loncu u koji se umaču kockice kruha."},
+{id:"762",iso2:"tj",ime:"Tadžikistan",jelo:"Qurutob",izvorno:"Қурутоб",emoji:"🥗",opis:"Komadi plosnatog kruha natopljeni umakom od sušenog jogurta, preliveni lukom, rajčicom i začinskim biljem."},
+{id:"764",iso2:"th",ime:"Tajland",jelo:"Pad thai",izvorno:"Phat thai · ผัดไทย",emoji:"🍜",opis:"Prženi rižini rezanci s jajem, tofuom ili kozicama, kikirikijem, klicama i umakom od tamarinda."},
+{id:"834",iso2:"tz",ime:"Tanzanija",jelo:"Pilau",izvorno:"Pilau",emoji:"🍚",opis:"Riža kuhana s mesom i mirisnom mješavinom začina – kardamomom, cimetom, klinčićima i kuminom."},
+{id:"768",iso2:"tg",ime:"Togo",jelo:"Akoumé",izvorno:"Akoumé",emoji:"🥣",opis:"Gusta kaša od kukuruznog brašna, uz umak od rajčice, bamije ili ribe."},
+{id:"776",iso2:"to",ime:"Tonga",jelo:"Lu pulu",izvorno:"Lu pulu",emoji:"🥥",opis:"Govedina s lukom i kokosovim mlijekom zamotana u lišće taroa i pečena u zemljanoj peći."},
+{id:"780",iso2:"tt",ime:"Trinidad i Tobago",jelo:"Doubles",izvorno:"Doubles",emoji:"🫓",opis:"Dvije mekane pržene pogačice punjene curryjem od slanutka i ljutim umacima – omiljeni ulični doručak."},
+{id:"788",iso2:"tn",ime:"Tunis",jelo:"Lablabi",izvorno:"Lablabi · لبلابي",emoji:"🥣",opis:"Juha od slanutka s češnjakom, kuminom i ljutom harissom, prelivena preko komada kruha i jajeta."},
+{id:"795",iso2:"tm",ime:"Turkmenistan",jelo:"Dograma",izvorno:"Dograma",emoji:"🍲",opis:"Komadići kruha natopljeni bogatom juhom od janjetine s lukom i rajčicom."},
+{id:"792",iso2:"tr",ime:"Turska",jelo:"Iskender kebab",izvorno:"İskender kebap",emoji:"🥙",opis:"Tanki listovi pečenog mesa na komadima pita kruha, preliveni umakom od rajčice, maslacem i jogurtom."},
+{id:"798",iso2:"tv",ime:"Tuvalu",jelo:"Pulaka s kokosom",izvorno:"Pulaka",emoji:"🥥",opis:"Gomolj divovskog močvarnog taroa kuhan ili pečen s kokosovom kremom, uz ribu.",pin:[179.2,-8.52]},
+{id:"800",iso2:"ug",ime:"Uganda",jelo:"Matoke",izvorno:"Matoke",emoji:"🍌",opis:"Zelene banane kuhane na pari u lišću i zgnječene, uz umak od kikirikija ili mesa."},
+{id:"826",iso2:"gb",ime:"Ujedinjena Kraljevina",jelo:"Riba i krumpirići",izvorno:"Fish and chips",emoji:"🐟",opis:"Bijela riba pohana u pivskom tijestu i debeli prženi krumpirići, uz pire od graška i ocat."},
+{id:"784",iso2:"ae",ime:"Ujedinjeni Arapski Emirati",jelo:"Machboos",izvorno:"Machboos · مجبوس",emoji:"🍛",opis:"Začinjena riža kuhana s piletinom ili janjetinom, sušenim limunom, lukom i mješavinom baharat."},
+{id:"804",iso2:"ua",ime:"Ukrajina",jelo:"Boršč",izvorno:"Borshch · Борщ",emoji:"🍲",opis:"Crvena juha od cikle, kupusa, krumpira i mesa, poslužena s kiselim vrhnjem i koprom."},
+{id:"858",iso2:"uy",ime:"Urugvaj",jelo:"Chivito",izvorno:"Chivito",emoji:"🥪",opis:"Velik sendvič s tankim govedim odreskom, šunkom, sirom, jajem, slaninom i salatom."},
+{id:"860",iso2:"uz",ime:"Uzbekistan",jelo:"Plov",izvorno:"Palov · Osh",emoji:"🍚",opis:"Riža kuhana u velikom kotlu s janjetinom, žutom mrkvom, lukom, češnjakom i kuminom."},
+{id:"548",iso2:"vu",ime:"Vanuatu",jelo:"Lap lap",izvorno:"Laplap",emoji:"🍠",opis:"Pire od jama ili taroa s kokosovom kremom i mesom, zamotan u lišće banane i pečen na užarenom kamenju."},
+{id:"336",iso2:"va",ime:"Vatikan",jelo:"Papinski rezanci",izvorno:"Fettuccine alla papalina",emoji:"🍝",opis:"Široki rezanci s pršutom, graškom, jajima i parmezanom, nazvani po papi Piju XII."},
+{id:"862",iso2:"ve",ime:"Venezuela",jelo:"Pabellón criollo",izvorno:"Pabellón criollo",emoji:"🍛",opis:"Natrgana pirjana govedina, crni grah, bijela riža i pržene slatke banane na jednom tanjuru."},
+{id:"704",iso2:"vn",ime:"Vijetnam",jelo:"Pho",izvorno:"Phở",emoji:"🍜",opis:"Mirisna juha s rižinim rezancima i govedinom, začinjena zvjezdastim anisom i cimetom, uz svježe bilje."},
+{id:"894",iso2:"zm",ime:"Zambija",jelo:"Nšima",izvorno:"Nshima",emoji:"🥣",opis:"Gusta kukuruzna kaša koja se jede rukom, uz ribu, meso ili zeleno lisnato povrće."},
+{id:"132",iso2:"cv",ime:"Zelenortska Republika",jelo:"Cachupa",izvorno:"Cachupa",emoji:"🍲",opis:"Sporo kuhano varivo od kukuruza, graha, povrća i mesa ili ribe – ostaci se ujutro prže za doručak."},
+{id:"716",iso2:"zw",ime:"Zimbabve",jelo:"Sadza s povrćem",izvorno:"Sadza",emoji:"🥣",opis:"Gusta kukuruzna kaša, poslužena uz pirjano zeleno povrće i gulaš od mesa."},
+];
+
+/* =====================================================================
+   POMOĆNE FUNKCIJE
+   ===================================================================== */
+const $ = id => document.getElementById(id);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const rand = (a, b) => a + Math.random() * (b - a);
+const smoothstep = x => { x = clamp(x, 0, 1); return x * x * (3 - 2 * x); };
+const TOTAL = COUNTRIES.length;
+const BY_ID = new Map(COUNTRIES.map(c => [c.id, c]));
+
+/** Emoji zastave iz ISO2 koda (rezerva ako se slika zastave ne učita). */
+const flagEmoji = iso2 => iso2.toUpperCase().replace(/./g, ch => String.fromCodePoint(0x1F1E6 + ch.charCodeAt(0) - 65));
+
+/** Stvarno ravnomjeran nasumični cijeli broj u [0, n) – crypto + odbacivanje (bez "modulo" pristranosti). */
+function randomIndex(n) {
+  if (window.crypto && crypto.getRandomValues) {
+    const limit = Math.floor(0x100000000 / n) * n, buf = new Uint32Array(1);
+    let x;
+    do { crypto.getRandomValues(buf); x = buf[0]; } while (x >= limit);
+    return x % n;
+  }
+  return Math.floor(Math.random() * n);
+}
+
+/** localStorage omotači (rade i kad je spremanje blokirano, npr. privatni prozor). */
+const STORE_DONE = "zavrtiGlobus.odradjeno", STORE_SETTINGS = "zavrtiGlobus.postavke";
+function loadJSON(key, fallback) { try { const v = JSON.parse(localStorage.getItem(key)); return v ?? fallback; } catch (e) { return fallback; } }
+function saveJSON(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) { /* nije kritično */ } }
+
+/* =====================================================================
+   STANJE APLIKACIJE
+   ===================================================================== */
+const done = new Set(loadJSON(STORE_DONE, []).filter(id => BY_ID.has(id)));
+const settings = Object.assign({ sound: true, face: true, vertical: false }, loadJSON(STORE_SETTINGS, {}));
+const saveDone = () => saveJSON(STORE_DONE, [...done]);
+const saveSettings = () => saveJSON(STORE_SETTINGS, settings);
+
+const S = {
+  phase: "loading",      // loading | idle | spinning | landed
+  rot: [-15, -22, 0],    // trenutna rotacija projekcije [λ, φ, γ]
+  speed: 0,              // °/frame – koristi se za odabir detaljnosti i "wobble"
+  spin: null,            // podaci o trenutnoj vrtnji
+  pick: null,            // odabrana država (objekt iz COUNTRIES)
+  landedAt: 0,           // trenutak zaustavljanja (ms)
+  timers: [],            // setTimeout-i slijeda nakon zaustavljanja
+  dragging: false, lastDrag: 0,
+};
+
+/* =====================================================================
+   KRIVULJA USPORAVANJA
+   Brzina v(t) = glatko_ubrzanje(t) · (1 − t)^p  → integriramo u tablicu.
+   Na kraju su i brzina i njezina promjena nula, pa globus "klizi" točno
+   na odabranu državu bez ikakvog skoka.
+   ===================================================================== */
+function buildEase(power, ramp) {
+  const N = 2000, v = new Float64Array(N + 1), p = new Float64Array(N + 1);
+  for (let i = 0; i <= N; i++) { const t = i / N; v[i] = (t < ramp ? smoothstep(t / ramp) : 1) * Math.pow(1 - t, power); }
+  for (let i = 1; i <= N; i++) p[i] = p[i - 1] + (v[i - 1] + v[i]) / (2 * N);
+  const area = p[N];
+  for (let i = 0; i <= N; i++) { p[i] /= area; v[i] /= area; }
+  const sample = (arr, t) => { if (t <= 0) return arr[0]; if (t >= 1) return arr[N]; const x = t * N, i = Math.floor(x); return arr[i] + (arr[i + 1] - arr[i]) * (x - i); };
+  const ease = t => sample(p, t);
+  ease.velocity = t => sample(v, t);          // derivacija (ukupni put = 1)
+  ease.peak = Math.max(...v);
+  ease.inverse = y => {                       // za koji t je ease(t) = y (za zvuk čegrtaljke)
+    let lo = 0, hi = N;
+    while (hi - lo > 1) { const mid = (lo + hi) >> 1; if (p[mid] < y) lo = mid; else hi = mid; }
+    const span = p[hi] - p[lo] || 1;
+    return (lo + (y - p[lo]) / span) / N;
+  };
+  return ease;
+}
+const EASE = buildEase(CONFIG.easePower, CONFIG.rampUp);
+
+
+/* =====================================================================
+   GLOBUS – crtanje na <canvas>
+   D3 (orthographic) + TopoJSON služe za pripremu podataka (države, susjedi,
+   centroidi, površine). Za samo crtanje svakog kadra koristi se brzi vlastiti
+   ortografski "projektor": točke su unaprijed pretvorene u 3D vektore, pa je
+   rotacija samo množenje matricom (bez trigonometrije po točki). Skrivene
+   države se preskaču, a pregusto zbijene točke se spajaju u jednu.
+   Tako je vrtnja glatka (60 fps) i s detaljnom kartom 50m.
+   ===================================================================== */
+const Globe = (() => {
+  const canvas = $("globe"), ctx = canvas.getContext("2d");
+  const baseCanvas = document.createElement("canvas"), baseCtx = baseCanvas.getContext("2d");
+  const overCanvas = document.createElement("canvas"), overCtx = overCanvas.getContext("2d");
+  const projection = window.d3 ? d3.geoOrthographic().clipAngle(90).precision(0) : null;   // za pinove i provjeru vidljivosti
+  const RAD = Math.PI / 180, EARTH_KM2 = 6371 * 6371;
+  let size = 0, dpr = 1, R = 1, scaleK = 1;
+  let world = null;
+  let baseValid = false, dirty = true;
+  const flagImages = new Map();
+
+  /* ----- Pakiranje geometrije u 3D vektore ----- */
+  let scratch = new Float32Array(3 * 4096);
+  function packCoords(coords) {
+    const n = coords.length, a = new Float32Array(n * 3);
+    let sx = 0, sy = 0, sz = 0;
+    for (let i = 0; i < n; i++) {
+      const l = coords[i][0] * RAD, p = coords[i][1] * RAD, cp = Math.cos(p);
+      const x = cp * Math.cos(l), y = cp * Math.sin(l), z = Math.sin(p);
+      a[3 * i] = x; a[3 * i + 1] = y; a[3 * i + 2] = z; sx += x; sy += y; sz += z;
+    }
+    const len = Math.hypot(sx, sy, sz) || 1, cx = sx / len, cy = sy / len, cz = sz / len;
+    let minDot = 1;
+    for (let i = 0; i < n; i++) minDot = Math.min(minDot, a[3 * i] * cx + a[3 * i + 1] * cy + a[3 * i + 2] * cz);
+    if (n * 3 > scratch.length) scratch = new Float32Array(n * 3);
+    // sinR: sinus kutnog polumjera "kape" koja obuhvaća cijeli prsten (za brzo odbacivanje)
+    const sinR = minDot < 0 ? 2 : Math.sqrt(Math.max(0, 1 - minDot * minDot));
+    return { a, n, cx, cy, cz, sinR };
+  }
+  function packFeature(f) {
+    const g = f.geometry; if (!g) return [];
+    const polys = g.type === "Polygon" ? [g.coordinates] : g.type === "MultiPolygon" ? g.coordinates : [];
+    const rings = [];
+    for (const poly of polys) for (const ring of poly) rings.push(packCoords(ring));
+    return rings;
+  }
+  const packLines = mls => (mls.type === "LineString" ? [mls.coordinates] : mls.coordinates).map(packCoords);
+
+  /* ----- Brza ortografska projekcija ----- */
+  let m00, m01, m02, m10, m11, m20, m21, m22, tx, ty, tol = 0.6;
+  function setView() {
+    const l = S.rot[0] * RAD, p = S.rot[1] * RAD, cl = Math.cos(l), sl = Math.sin(l), cp = Math.cos(p), sp = Math.sin(p);
+    // Ista rotacija kao d3.geoOrthographic().rotate([λ, φ]): X = dubina, Y = desno, Z = gore
+    m00 = cl * cp; m01 = -sl * cp; m02 = -sp;
+    m10 = sl;      m11 = cl;
+    m20 = cl * sp; m21 = -sl * sp; m22 = cp;
+    tx = size / 2; ty = size / 2;
+    projection.rotate(S.rot);
+  }
+  /** Projicira prsten u scratch; vraća broj točaka (0 = ništa nije vidljivo). Točke iza ruba "lijepe" se na rub. */
+  function projectRing(r) {
+    if (m00 * r.cx + m01 * r.cy + m02 * r.cz < -r.sinR) return 0;     // cijeli prsten je na stražnjoj strani
+    const a = r.a, n = r.n, s = scratch;
+    let anyVisible = false;
+    for (let i = 0, j = 0; i < n; i++, j += 3) {
+      const x = a[j], y = a[j + 1], z = a[j + 2];
+      const X = m00 * x + m01 * y + m02 * z, Y = m10 * x + m11 * y, Z = m20 * x + m21 * y + m22 * z;
+      if (X > 0) { s[j] = tx + R * Y; s[j + 1] = ty - R * Z; anyVisible = true; }
+      else { const L = Math.hypot(Y, Z) || 1; s[j] = tx + R * Y / L; s[j + 1] = ty - R * Z / L; }
+      s[j + 2] = X;
+    }
+    return anyVisible ? n : 0;
+  }
+  /** Dodaje zatvoreni prsten (za ispunu) u trenutni path. */
+  function addRing(c, r) {
+    const n = projectRing(r); if (!n) return;
+    const s = scratch; let lx = s[0], ly = s[1];
+    c.moveTo(lx, ly);
+    for (let j = 3; j < n * 3; j += 3) {
+      const x = s[j], y = s[j + 1];
+      if (Math.abs(x - lx) + Math.abs(y - ly) < tol && j < n * 3 - 3) continue;
+      c.lineTo(x, y); lx = x; ly = y;
+    }
+    c.closePath();
+  }
+  /** Dodaje liniju (granice, obala, valići) – stražnji dijelovi se ne crtaju. */
+  function addLine(c, r) {
+    const n = projectRing(r); if (!n) return;
+    const s = scratch; let lx = 0, ly = 0, pen = false;
+    for (let j = 0; j < n * 3; j += 3) {
+      const x = s[j], y = s[j + 1], vis = s[j + 2] > 0;
+      if (vis) {
+        if (!pen) { if (j > 0) { c.moveTo(s[j - 3], s[j - 2]); c.lineTo(x, y); } else c.moveTo(x, y); pen = true; lx = x; ly = y; }
+        else if (Math.abs(x - lx) + Math.abs(y - ly) >= tol || j === n * 3 - 3) { c.lineTo(x, y); lx = x; ly = y; }
+      } else if (pen) { c.lineTo(x, y); pen = false; }
+    }
+  }
+  /** Okvir (bounding box) vidljivog dijela prstenova – za postavljanje zastave preko države. */
+  function ringsBounds(rings) {
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    for (const r of rings) {
+      const n = projectRing(r);
+      for (let j = 0; j < n * 3; j += 3) if (scratch[j + 2] > 0) {
+        x0 = Math.min(x0, scratch[j]); x1 = Math.max(x1, scratch[j]); y0 = Math.min(y0, scratch[j + 1]); y1 = Math.max(y1, scratch[j + 1]);
+      }
+    }
+    return [[x0, y0], [x1, y1]];
+  }
+
+  /* ----- Priprema podataka ----- */
+  function largestPolygon(geom) {
+    if (geom.type === "Polygon") return geom;
+    let best = null, bestA = -1;
+    for (const coords of geom.coordinates) {
+      const poly = { type: "Polygon", coordinates: coords }, a = d3.geoArea(poly);
+      if (a > bestA && a < 2 * Math.PI) { bestA = a; best = poly; }
+    }
+    return best || geom;
+  }
+
+  function prepare(topo) {
+    const obj = topo.objects.countries;
+    const features = topojson.feature(topo, obj).features;
+    const neighbors = topojson.neighbors(obj.geometries);
+
+    // Bojanje grafa: susjedne države nikad nisu iste boje (pohlepno, od najvećeg broja susjeda).
+    const colorIdx = new Array(features.length).fill(-1);
+    d3.range(features.length).sort((a, b) => neighbors[b].length - neighbors[a].length).forEach(i => {
+      const used = new Set(neighbors[i].map(j => colorIdx[j]));
+      let k = 0; while (used.has(k)) k++;
+      colorIdx[i] = k;
+    });
+
+    // Informacije po državi (jedna država može imati više dijelova, npr. Australija + otočići Ashmore).
+    const infoById = new Map();
+    const featureInfo = features.map((f, i) => {
+      const id = f.id, country = id ? BY_ID.get(id) : undefined;
+      const fi = { i, id, country, colorIdx: colorIdx[i], area: d3.geoArea(f) * EARTH_KM2, rings: packFeature(f) };
+      if (country) {
+        const info = infoById.get(id) || { country, idxs: [], area: 0, main: -1, mainArea: -1 };
+        info.idxs.push(i); info.area += fi.area;
+        if (fi.area > info.mainArea) { info.mainArea = fi.area; info.main = i; }
+        infoById.set(id, info);
+      }
+      return fi;
+    });
+    for (const info of infoById.values()) {
+      const c = info.country;
+      // Središte za centriranje: centroid najvećeg dijela države (npr. kopnena Francuska, ne Gvajana).
+      info.center = c.centar || d3.geoCentroid(largestPolygon(features[info.main].geometry));
+      info.small = info.area < CONFIG.smallAreaKm2;
+      info.needsPin = info.area < CONFIG.pinAreaKm2;
+      info.rings = info.idxs.flatMap(i => featureInfo[i].rings);
+    }
+    // Države kojih nema na karti 50m (Tuvalu) – samo točkica/pin na koordinatama.
+    for (const c of COUNTRIES) if (!infoById.has(c.id) && c.pin)
+      infoById.set(c.id, { country: c, idxs: [], rings: [], area: 0, center: c.pin, small: true, needsPin: true });
+
+    world = {
+      featureInfo, infoById,
+      borders: packLines(topojson.mesh(topo, obj, (a, b) => a !== b)),
+      coast: packLines(topojson.mesh(topo, obj, (a, b) => a === b)),
+      smallList: [...infoById.values()].filter(x => x.small),
+      waves: packLines(makeWaves()),
+    };
+    recolor();
+    return world;
+  }
+
+  /** Bijeli "valići" na oceanu – male geografske linije, pa se vrte zajedno s globusom. */
+  function makeWaves() {
+    const spots = [[-150,22],[-138,-24],[-122,4],[-168,-44],[160,26],[176,-16],[-36,32],[-28,-22],[-46,6],[-18,-46],[70,-12],[88,-36],[58,-46],[148,-52],[-96,-48],[2,-6],[-58,44],[22,-58],[-110,-28],[146,40],[-160,48],[120,-28],[-80,-10],[40,-30]];
+    return { type: "MultiLineString", coordinates: spots.map(([lo, la]) => d3.range(17).map(i => [lo - 4.5 + i * 0.56, la + 0.85 * Math.sin(i / 16 * Math.PI * 4)])) };
+  }
+
+  /** Boje država (grupirane po boji radi bržeg crtanja). Poziva se i kad se promijeni popis odrađenih. */
+  function recolor() {
+    if (!world) return;
+    const groups = new Map();
+    for (const fi of world.featureInfo) {
+      let color;
+      if (fi.id === "010") color = CONFIG.iceColor;                 // Antarktika
+      else if (!fi.country) color = CONFIG.otherLand;              // teritoriji koji nisu u popisu
+      else if (done.has(fi.id)) color = CONFIG.doneColor;          // odrađeno = sivo
+      else color = CONFIG.landColors[fi.colorIdx % CONFIG.landColors.length];
+      fi.color = color;
+      if (!groups.has(color)) groups.set(color, []);
+      groups.get(color).push(fi);
+    }
+    world.groups = groups;
+    baseValid = false; dirty = true;
+  }
+
+  /* ----- Veličina ----- */
+  function resize(px) {
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    size = Math.max(120, Math.floor(px));
+    R = size / 2 - CONFIG.outlineWidth;
+    scaleK = clamp(R / 300, 0.55, 1.5);
+    for (const c of [canvas, baseCanvas, overCanvas]) { c.width = Math.round(size * dpr); c.height = Math.round(size * dpr); }
+    canvas.style.width = canvas.style.height = size + "px";
+    if (projection) projection.scale(R).translate([size / 2, size / 2]);
+    drawOverlay();
+    baseValid = false; dirty = true;
+  }
+  const lw = x => x * scaleK;
+  const isVisible = pt => d3.geoDistance(pt, [-S.rot[0], -S.rot[1]]) < Math.PI / 2 - 0.03;
+
+  /* ----- Crtanje ----- */
+  function drawBase(c) {
+    setView();
+    const m = size / 2;
+    c.lineJoin = "round"; c.lineCap = "round";
+    // Ocean
+    const g = c.createRadialGradient(m - R * 0.28, m - R * 0.4, R * 0.05, m, m, R * 1.05);
+    g.addColorStop(0, CONFIG.oceanTop); g.addColorStop(0.55, CONFIG.oceanMid); g.addColorStop(1, CONFIG.oceanEdge);
+    c.beginPath(); c.arc(m, m, R, 0, Math.PI * 2); c.fillStyle = g; c.fill();
+    // Valići
+    c.beginPath(); for (const r of world.waves) addLine(c, r);
+    c.strokeStyle = "rgba(255,255,255,.8)"; c.lineWidth = lw(2.8); c.stroke();
+    // Kopno – jedna ispuna po boji
+    for (const [color, list] of world.groups) {
+      c.beginPath();
+      for (const fi of list) for (const r of fi.rings) addRing(c, r);
+      c.fillStyle = color; c.fill();
+    }
+    // Debeli tamni cartoon obrubi: granice pa obala
+    c.strokeStyle = CONFIG.ink;
+    c.beginPath(); for (const r of world.borders) addLine(c, r); c.lineWidth = lw(CONFIG.borderWidth); c.stroke();
+    c.beginPath(); for (const r of world.coast) addLine(c, r); c.lineWidth = lw(CONFIG.coastWidth); c.stroke();
+    // Točkice za male države (Vatikan, Monako, Malta, otočne države…)
+    c.lineWidth = lw(1.8);
+    for (const info of world.smallList) {
+      if (!isVisible(info.center)) continue;
+      const [x, y] = projection(info.center);
+      c.beginPath(); c.arc(x, y, lw(4.2), 0, Math.PI * 2);
+      c.fillStyle = done.has(info.country.id) ? CONFIG.doneColor : (info.idxs.length ? world.featureInfo[info.idxs[0]].color : CONFIG.landColors[0]);
+      c.fill(); c.stroke();
+    }
+  }
+
+  /** Sjenčanje lopte, sjajni highlight gore lijevo i obrub – ne ovisi o rotaciji, pa se crta samo jednom. */
+  function drawOverlay() {
+    const c = overCtx, m = size / 2;
+    c.setTransform(dpr, 0, 0, dpr, 0, 0); c.clearRect(0, 0, size, size);
+    let g = c.createRadialGradient(m - R * 0.32, m - R * 0.36, R * 0.15, m, m, R);
+    g.addColorStop(0, "rgba(255,255,255,0.10)"); g.addColorStop(0.6, "rgba(40,20,90,0)"); g.addColorStop(1, "rgba(40,20,90,0.26)");
+    c.beginPath(); c.arc(m, m, R, 0, Math.PI * 2); c.fillStyle = g; c.fill();
+    c.save(); c.translate(m - R * 0.42, m - R * 0.5); c.rotate(-0.7);
+    g = c.createRadialGradient(0, 0, 0, 0, 0, R * 0.3);
+    g.addColorStop(0, "rgba(255,255,255,0.7)"); g.addColorStop(1, "rgba(255,255,255,0)");
+    c.scale(1, 0.55); c.beginPath(); c.arc(0, 0, R * 0.3, 0, Math.PI * 2); c.fillStyle = g; c.fill(); c.restore();
+    c.beginPath(); c.arc(m, m, R * 0.84, Math.PI * 1.08, Math.PI * 1.36);
+    c.strokeStyle = "rgba(255,255,255,0.85)"; c.lineWidth = Math.max(4, R * 0.055); c.lineCap = "round"; c.stroke();
+    c.beginPath(); c.arc(m + R * 0.84 * Math.cos(Math.PI * 1.44), m + R * 0.84 * Math.sin(Math.PI * 1.44), Math.max(2, R * 0.03), 0, Math.PI * 2);
+    c.fillStyle = "rgba(255,255,255,0.85)"; c.fill();
+    c.beginPath(); c.arc(m, m, R, 0, Math.PI * 2); c.strokeStyle = CONFIG.ink; c.lineWidth = CONFIG.outlineWidth * Math.max(0.8, scaleK); c.stroke();
+  }
+
+  /** Odabrana država: ostatak svijeta lagano izblijedi, država je žuta s pulsirajućim sjajem,
+      nakratko poprimi zastavu, a manje države dobiju i veliki pin. */
+  function drawPick(c, now) {
+    const info = S.pick && world.infoById.get(S.pick.id);
+    if (!info || S.phase !== "landed") return;
+    const ms = now - S.landedAt, t = ms / 1000, m = size / 2;
+    const pulse = 0.5 + 0.5 * Math.sin(t * Math.PI * 2 * 1.1);
+    setView();
+    // "Reflektor": ostatak globusa lagano izblijedi
+    c.beginPath(); c.arc(m, m, R, 0, Math.PI * 2); c.fillStyle = `rgba(255,255,255,${0.3 * smoothstep(ms / 400)})`; c.fill();
+    if (info.rings.length) {
+      c.lineJoin = "round"; c.lineCap = "round";
+      c.beginPath(); for (const r of info.rings) addRing(c, r);
+      // 1) pulsirajući sjaj ispod, 2) žuta ispuna, 3) tamni obrub
+      c.save();
+      c.shadowColor = "rgba(255,200,0,0.95)"; c.shadowBlur = lw(8 + 14 * pulse);
+      c.strokeStyle = "#FFF6B0"; c.lineWidth = lw(5 + 6 * pulse); c.stroke();
+      c.restore();
+      c.fillStyle = CONFIG.pickColor; c.fill();
+      const img = flagImages.get(S.pick.iso2);
+      const fa = smoothstep((ms - CONFIG.flagFillAt) / 350) * (1 - smoothstep((ms - CONFIG.flagFillUntil) / 450));
+      if (fa > 0.01 && img && img.complete && img.naturalWidth && !info.small) {
+        const [[x0, y0], [x1, y1]] = ringsBounds(world.featureInfo[info.main].rings);
+        const w = x1 - x0, h = y1 - y0, k = Math.max(w / img.naturalWidth, h / img.naturalHeight);
+        if (isFinite(k) && k > 0) {
+          c.save(); c.clip(); c.globalAlpha = fa;
+          c.drawImage(img, x0 + (w - img.naturalWidth * k) / 2, y0 + (h - img.naturalHeight * k) / 2, img.naturalWidth * k, img.naturalHeight * k);
+          c.restore();
+        }
+      }
+      c.strokeStyle = CONFIG.ink; c.lineWidth = lw(2.4); c.stroke();
+    }
+    if (info.needsPin) drawPin(c, projection(info.center), t);
+  }
+
+  function drawPin(c, [x, y], t) {
+    for (let k = 0; k < 2; k++) {                       // pulsirajući krugovi
+      const ph = (t * 0.9 + k * 0.5) % 1;
+      c.beginPath(); c.arc(x, y, lw(6 + 40 * ph), 0, Math.PI * 2);
+      c.strokeStyle = `rgba(255,77,109,${(1 - ph) * 0.9})`; c.lineWidth = lw(4 * (1 - ph) + 1); c.stroke();
+    }
+    const d = clamp(t / 0.55, 0, 1);                    // pin "padne" s malim odskokom
+    const drop = d < 1 ? -lw(70) * (1 - d) * (1 - d) - Math.sin(d * Math.PI) * lw(6) : 0;
+    const s = lw(1.15), py = y + drop;
+    c.beginPath(); c.ellipse(x, y, lw(8), lw(3), 0, 0, Math.PI * 2); c.fillStyle = "rgba(43,33,64,.35)"; c.fill();
+    c.save(); c.translate(x, py); c.scale(s, s);
+    c.beginPath(); c.moveTo(0, 0);
+    c.bezierCurveTo(-6, -12, -16, -20, -16, -32); c.arc(0, -32, 16, Math.PI, 0); c.bezierCurveTo(16, -20, 6, -12, 0, 0); c.closePath();
+    c.fillStyle = "#FF4D6D"; c.fill(); c.lineWidth = 3.5; c.strokeStyle = CONFIG.ink; c.stroke();
+    c.beginPath(); c.arc(0, -32, 6.5, 0, Math.PI * 2); c.fillStyle = "#fff"; c.fill(); c.lineWidth = 2.5; c.stroke();
+    c.beginPath(); c.arc(-6, -38, 3, 0, Math.PI * 2); c.fillStyle = "rgba(255,255,255,.7)"; c.fill();
+    c.restore();
+  }
+
+  /** Jedan kadar. Kad globus miruje, osnovna slika se uzima iz međuspremnika. */
+  function render(now) {
+    if (!world || !size) return;
+    const moving = S.speed > 0.0001;
+    if (!dirty && !moving && S.phase !== "landed") return;
+    dirty = false;
+    const W = canvas.width;
+    ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, W, W);
+    if (moving) {
+      baseValid = false;
+      tol = CONFIG.detailPx[S.speed > 2 ? 2 : 1];
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      drawBase(ctx);
+    } else {
+      if (!baseValid) {
+        tol = CONFIG.detailPx[0];
+        baseCtx.setTransform(1, 0, 0, 1, 0, 0); baseCtx.clearRect(0, 0, W, W);
+        baseCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        drawBase(baseCtx);
+        baseValid = true;
+      }
+      ctx.drawImage(baseCanvas, 0, 0);
+    }
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    tol = CONFIG.detailPx[0];
+    drawPick(ctx, now);
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.drawImage(overCanvas, 0, 0);
+  }
+
+  function preloadFlag(iso2) {
+    if (flagImages.has(iso2)) return;
+    const img = new Image(); img.decoding = "async"; img.src = CONFIG.flagPng(iso2);
+    flagImages.set(iso2, img);
+  }
+
+  return {
+    canvas, prepare, resize, render, recolor, preloadFlag,
+    invalidate() { baseValid = false; dirty = true; },
+    get world() { return world; },
+    get radius() { return R; },
+  };
+})();
+
+/* =====================================================================
+   ZVUK – sve se sintetizira Web Audio API-jem (bez vanjskih datoteka)
+   ===================================================================== */
+const Sound = (() => {
+  let ac = null, master = null, noise = null;
+  function ensure() {
+    if (!settings.sound) return null;
+    if (!ac) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return null;
+      ac = new AC();
+      master = ac.createGain(); master.gain.value = 0.8; master.connect(ac.destination);
+      noise = ac.createBuffer(1, ac.sampleRate, ac.sampleRate);
+      const d = noise.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    }
+    if (ac.state === "suspended") ac.resume();
+    return ac;
+  }
+  const env = (g, t, peak, a, dec) => { g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + a); g.gain.exponentialRampToValueAtTime(0.0001, t + a + dec); };
+
+  /** Jedan "klik" čegrtaljke: kratki šum kroz pojasni filtar + tihi ton. */
+  function click(t, k) {
+    const src = ac.createBufferSource(); src.buffer = noise;
+    const bp = ac.createBiquadFilter(); bp.type = "bandpass"; bp.frequency.value = 1800 + 2200 * k; bp.Q.value = 5;
+    const g = ac.createGain(); env(g, t, 0.35 + 0.35 * k, 0.002, 0.04);
+    src.connect(bp).connect(g).connect(master); src.start(t, Math.random() * 0.8, 0.06);
+    const o = ac.createOscillator(); o.type = "triangle"; o.frequency.setValueAtTime(700 + 500 * k, t);
+    const og = ac.createGain(); env(og, t, 0.08, 0.002, 0.025);
+    o.connect(og).connect(master); o.start(t); o.stop(t + 0.05);
+  }
+
+  /** Zakaže sve klikove unaprijed – točno usklađeni s krivuljom usporavanja globusa. */
+  function spin(totalDeg, durationMs) {
+    if (!ensure()) return;
+    const t0 = ac.currentTime + 0.03, peg = CONFIG.clickEvery;
+    let last = -1;
+    for (let m = 1; m * peg < totalDeg; m++) {
+      const tt = EASE.inverse(m * peg / totalDeg), at = t0 + tt * durationMs / 1000;
+      if (at - last < 0.03) continue;           // pri velikoj brzini ne više od ~33 klika/s
+      last = at;
+      click(at, clamp(EASE.velocity(tt) / EASE.peak, 0, 1));
+    }
+    // Tihi "vjetar" koji prati brzinu vrtnje
+    const src = ac.createBufferSource(); src.buffer = noise; src.loop = true;
+    const lp = ac.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 900;
+    const g = ac.createGain(); g.gain.setValueAtTime(0.0001, t0);
+    for (let i = 1; i <= 24; i++) { const tt = i / 24; g.gain.linearRampToValueAtTime(0.0001 + 0.09 * EASE.velocity(tt) / EASE.peak, t0 + tt * durationMs / 1000); }
+    src.connect(lp).connect(g).connect(master); src.start(t0); src.stop(t0 + durationMs / 1000 + 0.1);
+  }
+
+  /** "Pop" kad iskoči balon. */
+  function pop() {
+    if (!ensure()) return;
+    const t = ac.currentTime, o = ac.createOscillator(), g = ac.createGain();
+    o.type = "sine"; o.frequency.setValueAtTime(260, t); o.frequency.exponentialRampToValueAtTime(980, t + 0.12);
+    env(g, t, 0.35, 0.005, 0.16); o.connect(g).connect(master); o.start(t); o.stop(t + 0.2);
+  }
+
+  /** "Ta-da!" – kratki predudar pa veseli durski akord sa svjetlucanjem. */
+  function tada() {
+    if (!ensure()) return;
+    const t = ac.currentTime + 0.02;
+    const note = (f, start, dur, vol, type = "triangle") => {
+      const o = ac.createOscillator(), g = ac.createGain(), lfo = ac.createOscillator(), lg = ac.createGain();
+      o.type = type; o.frequency.value = f;
+      lfo.frequency.value = 5.5; lg.gain.value = f * 0.006; lfo.connect(lg).connect(o.frequency);
+      g.gain.setValueAtTime(0.0001, start); g.gain.exponentialRampToValueAtTime(vol, start + 0.02);
+      g.gain.setValueAtTime(vol, start + dur * 0.4); g.gain.exponentialRampToValueAtTime(0.0001, start + dur);
+      o.connect(g).connect(master); o.start(start); lfo.start(start); o.stop(start + dur + 0.05); lfo.stop(start + dur + 0.05);
+    };
+    note(392, t, 0.13, 0.22, "square");                       // "ta"
+    [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => note(f, t + 0.16, 1.1, 0.13 - i * 0.015, i % 2 ? "triangle" : "sawtooth"));  // "da!"
+    const src = ac.createBufferSource(); src.buffer = noise;
+    const hp = ac.createBiquadFilter(); hp.type = "highpass"; hp.frequency.value = 6000;
+    const g = ac.createGain(); env(g, t + 0.16, 0.12, 0.01, 0.9);
+    src.connect(hp).connect(g).connect(master); src.start(t + 0.16, 0, 1);
+  }
+
+  return { ensure, spin, pop, tada, mute(on) { if (master) master.gain.value = on ? 0.8 : 0; } };
+})();
+
+/* =====================================================================
+   KONFETI
+   ===================================================================== */
+const Confetti = (() => {
+  const cv = $("confetti"), c = cv.getContext("2d");
+  const COLORS = ["#FF5C8A", "#FFE14D", "#46D08A", "#4FB3FF", "#B79CFF", "#FF9F45", "#FFFFFF"];
+  let parts = [], running = false, last = 0, dpr = 1;
+  function fit() { dpr = Math.min(window.devicePixelRatio || 1, 2); cv.width = cv.clientWidth * dpr; cv.height = cv.clientHeight * dpr; }
+  function burst(x, y, n = 170) {
+    fit();
+    for (let i = 0; i < n; i++) {
+      const a = rand(0, Math.PI * 2), sp = rand(250, 900);
+      parts.push({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - rand(250, 550), r: rand(0, 6.3), vr: rand(-12, 12),
+        w: rand(7, 14), h: rand(4, 9), color: COLORS[i % COLORS.length], shape: i % 4, life: rand(2.2, 3.6), age: 0 });
+    }
+    if (!running) { running = true; last = performance.now(); requestAnimationFrame(step); }
+  }
+  function step(now) {
+    const dt = Math.min(0.033, (now - last) / 1000); last = now;
+    c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, cv.width, cv.height); c.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const H = cv.clientHeight + 40;
+    parts = parts.filter(p => (p.age += dt) < p.life && p.y < H);
+    for (const p of parts) {
+      p.vx *= 1 - 1.6 * dt; p.vy = p.vy * (1 - 1.2 * dt) + 1100 * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.r += p.vr * dt;
+      c.save(); c.translate(p.x, p.y); c.rotate(p.r); c.globalAlpha = clamp((p.life - p.age) * 2, 0, 1);
+      c.fillStyle = p.color; c.strokeStyle = CONFIG.ink; c.lineWidth = 1.5;
+      if (p.shape === 0) { c.beginPath(); c.arc(0, 0, p.h * 0.7, 0, Math.PI * 2); c.fill(); c.stroke(); }
+      else if (p.shape === 1) { c.scale(1, Math.cos(p.r * 2)); c.fillRect(-p.w / 2, -p.h / 2, p.w, p.h); c.strokeRect(-p.w / 2, -p.h / 2, p.w, p.h); }
+      else if (p.shape === 2) { c.beginPath(); for (let k = 0; k < 10; k++) { const rr = k % 2 ? p.h * 0.45 : p.h; c.lineTo(Math.cos(k * Math.PI / 5) * rr, Math.sin(k * Math.PI / 5) * rr); } c.closePath(); c.fill(); c.stroke(); }
+      else { c.beginPath(); c.moveTo(-p.w / 2, 0); c.quadraticCurveTo(0, -p.h, p.w / 2, 0); c.lineWidth = 3.5; c.strokeStyle = p.color; c.stroke(); }
+      c.restore();
+    }
+    if (parts.length) requestAnimationFrame(step);
+    else { running = false; c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, cv.width, cv.height); }
+  }
+  return { burst };
+})();
+
+/* =====================================================================
+   SUČELJE – elementi i male funkcije
+   ===================================================================== */
+const UI = {
+  app: $("app"), globeArea: $("globeArea"), holder: $("globeHolder"), bounce: $("globeBounce"), wobble: $("globeWobble"),
+  balloon: $("balloon"), balloonFlag: $("balloonFlag"), balloonName: $("balloonName"),
+  placeholder: $("placeholderCard"), phIcon: $("phIcon"), phTitle: $("phTitle"), phText: $("phText"),
+  card: $("dishCard"), spinBtn: $("btnSpin"), doneBtn: $("btnDone"), toast: $("toast"),
+};
+
+/** Napravi sliku zastave (SVG s flagcdn.com); ako se ne učita, prikaži emoji zastave. */
+function fillFlag(box, c) {
+  box.innerHTML = "";
+  const img = new Image();
+  img.alt = "Zastava: " + c.ime; img.decoding = "async";
+  img.onerror = () => { box.innerHTML = `<span class="emoji-flag" role="img" aria-label="Zastava: ${c.ime}">${flagEmoji(c.iso2)}</span>`; };
+  img.src = CONFIG.flagSvg(c.iso2);
+  box.appendChild(img);
+}
+
+let toastTimer = 0;
+function toast(msg, ms = 2600) {
+  UI.toast.textContent = msg; UI.toast.classList.add("show");
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => UI.toast.classList.remove("show"), ms);
+}
+function popButton(btn) { btn.classList.remove("pop"); void btn.offsetWidth; btn.classList.add("pop"); }
+function setMood(m) { UI.wobble.classList.remove("mood-idle", "mood-dizzy", "mood-happy"); UI.wobble.classList.add("mood-" + m); }
+
+function updateCounter() {
+  $("doneCount").textContent = done.size;
+  $("totalCount").textContent = TOTAL;
+  $("progressBar").style.width = (done.size / TOTAL * 100) + "%";
+}
+function updateDoneButton() {
+  if (!S.pick) return;
+  const isDone = done.has(S.pick.id);
+  UI.doneBtn.textContent = isDone ? "✔️ Odrađeno!" : "✅ Označi kao odrađeno";
+  UI.doneBtn.title = isDone ? "Klikni za poništavanje" : "Spremi da si ovo jelo već napravio";
+  UI.doneBtn.classList.toggle("btn-done", isDone);
+  UI.doneBtn.classList.toggle("btn-green", !isDone);
+}
+function setDone(id, on) {
+  if (on) done.add(id); else done.delete(id);
+  saveDone(); updateCounter(); Globe.recolor(); updateDoneButton();
+}
+function setSpinLabel() {
+  UI.spinBtn.textContent = S.phase === "landed" ? "ZAVRTI PONOVO!" : "ZAVRTI!";
+  UI.spinBtn.classList.toggle("small", S.phase === "landed");
+  UI.spinBtn.disabled = S.phase === "spinning" || S.phase === "loading";
+}
+function setPlaceholder(icon, title, text) { UI.phIcon.textContent = icon; UI.phTitle.textContent = title; UI.phText.innerHTML = text; }
+
+/* =====================================================================
+   VRTNJA
+   ===================================================================== */
+function availablePool() { return COUNTRIES.filter(c => !done.has(c.id) && Globe.world.infoById.has(c.id)); }
+
+function startSpin() {
+  if (S.phase !== "idle") return;
+  const pool = availablePool();
+  if (!pool.length) { toast("🎉 Sve države su odrađene! Resetiraj listu za novu rundu."); return; }
+  const country = pool[randomIndex(pool.length)];         // ravnomjerno po državama
+  const info = Globe.world.infoById.get(country.id);
+  const [lon, lat] = info.center;
+  const turns = CONFIG.minTurns + randomIndex(CONFIG.maxTurns - CONFIG.minTurns + 1);
+  const duration = rand(CONFIG.minDuration, CONFIG.maxDuration);
+  const l0 = S.rot[0], p0 = S.rot[1];
+  const delta = (((-lon - l0) % 360) + 360) % 360;       // ostatak do cilja
+  S.spin = { start: performance.now(), duration, l0, p0, total: delta + 360 * turns, pT: -lat, country };
+  S.pick = country; S.phase = "spinning";
+  Globe.preloadFlag(country.iso2);
+  new Image().src = CONFIG.flagSvg(country.iso2);          // predučitaj i SVG za balon/karticu
+  Sound.spin(S.spin.total, duration);
+  setMood("dizzy"); setSpinLabel(); popButton(UI.spinBtn);
+  UI.placeholder.classList.add("dim");
+  setPlaceholder("🤔", "Vrtim, vrtim…", "Gdje ćemo stati?");
+}
+
+function tickSpin(now) {
+  const sp = S.spin, t = clamp((now - sp.start) / sp.duration, 0, 1), e = EASE(t);
+  S.rot[0] = sp.l0 + sp.total * e;
+  S.rot[1] = sp.p0 + (sp.pT - sp.p0) * e;
+  const vNorm = EASE.velocity(t) / EASE.peak;
+  S.speed = sp.total * EASE.velocity(t) / sp.duration * 16.7;   // °/kadar
+  // "Napuhavanje" (1.05) na početku, lagani wobble dok se vrti
+  const inflate = smoothstep((now - sp.start) / 220) * (1 - smoothstep((t - 0.82) / 0.18));
+  const wob = Math.sin(now / 1000 * Math.PI * 2 * 3.1) * 2.4 * vNorm;
+  const bobY = Math.sin(now / 1000 * Math.PI * 2 * 6.2) * 3 * vNorm;
+  UI.wobble.style.transform = `translateY(${bobY.toFixed(2)}px) rotate(${wob.toFixed(2)}deg) scale(${(1 + 0.05 * inflate).toFixed(4)})`;
+  if (t >= 1) {
+    S.rot[0] = ((sp.l0 + sp.total + 180) % 360 + 360) % 360 - 180;
+    S.rot[1] = sp.pT; S.speed = 0; S.spin = null;
+    land(now);
+  }
+}
+
+/** Zaustavljanje: bounce, balon s imenom i zastavom, pa konfeti, ta-da i kartica. */
+function land(now) {
+  const c = S.pick;
+  S.phase = "landed"; S.landedAt = now;
+  UI.wobble.style.transform = "";
+  UI.bounce.classList.remove("bounce"); void UI.bounce.offsetWidth; UI.bounce.classList.add("bounce");
+  setMood("happy");
+  UI.balloonName.textContent = c.ime;
+  UI.balloonName.style.fontSize = c.ime.length > 18 ? "calc(var(--u)*4.4)" : c.ime.length > 12 ? "calc(var(--u)*5.2)" : "";
+  UI.balloonFlag.innerHTML = '<div class="flag wave"></div>';
+  fillFlag(UI.balloonFlag.firstChild, c);
+  UI.balloon.classList.remove("hide", "show"); void UI.balloon.offsetWidth; UI.balloon.classList.add("show");
+  Sound.pop();
+  S.timers.push(setTimeout(() => {
+    const r = UI.holder.getBoundingClientRect(), a = UI.app.getBoundingClientRect();
+    Confetti.burst(r.left - a.left + r.width / 2, r.top - a.top + r.height * 0.4);
+    Sound.tada();
+  }, CONFIG.confettiAt));
+  S.timers.push(setTimeout(showCard, CONFIG.cardAt));
+}
+
+function showCard() {
+  const c = S.pick;
+  fillFlag($("cardFlag"), c);
+  $("cardCountry").textContent = c.ime;
+  $("cardEmoji").textContent = c.emoji;
+  $("cardDish").textContent = c.jelo;
+  $("cardOrig").textContent = "(" + c.izvorno + ")";
+  $("cardOrig").hidden = c.izvorno.trim().toLowerCase() === c.jelo.trim().toLowerCase();   // ne ponavljaj isto ime
+  $("cardDesc").textContent = c.opis;
+  $("btnRecipe").href = "https://www.google.com/search?q=" + encodeURIComponent(c.izvorno.split("·")[0].trim() + " " + c.jelo + " recept");
+  updateDoneButton();
+  UI.placeholder.hidden = true;
+  UI.card.hidden = false;
+  UI.card.classList.remove("leave", "enter"); void UI.card.offsetWidth; UI.card.classList.add("enter");
+  fitCard();
+  setSpinLabel();
+}
+
+/** Ako kartica ne stane (mali ekran / dugi opis), smanji tekst dok ne stane. */
+function fitCard() {
+  const card = UI.card, area = $("cardArea"), portrait = UI.app.classList.contains("portrait");
+  const over = () => portrait ? card.scrollHeight > card.clientHeight + 1 : card.offsetHeight > area.clientHeight;
+  let fit = 1;
+  card.style.setProperty("--fit", 1);
+  while (over() && fit > 0.6) { fit -= 0.04; card.style.setProperty("--fit", fit.toFixed(2)); }
+}
+
+/** "Zavrti ponovo": kartica i balon glatko odlaze, globus se vraća i odmah kreće nova vrtnja. */
+function respin() {
+  if (S.phase !== "landed") return;
+  S.timers.forEach(clearTimeout); S.timers = [];
+  UI.balloon.classList.remove("show"); UI.balloon.classList.add("hide");
+  if (!UI.card.hidden) { UI.card.classList.remove("enter"); UI.card.classList.add("leave"); }
+  S.phase = "idle"; S.pick = null; Globe.invalidate(); setMood("idle"); setSpinLabel();
+  setTimeout(() => {
+    UI.card.hidden = true; UI.card.classList.remove("leave");
+    UI.placeholder.hidden = false;
+    startSpin();
+  }, 380);
+}
+function mainAction() {
+  Sound.ensure();
+  if (S.phase === "idle") startSpin();
+  else if (S.phase === "landed") respin();
+}
+
+/* =====================================================================
+   GLAVNA PETLJA (d3.timer = requestAnimationFrame)
+   ===================================================================== */
+let lastT = 0;
+function frame(elapsed) {
+  const now = performance.now(), dt = Math.min(50, now - (lastT || now)); lastT = now;
+  if (S.phase === "spinning") tickSpin(now);
+  else if (S.phase === "idle" && !S.dragging && CONFIG.idleSpeed && now - S.lastDrag > 1500) {
+    S.rot[0] += CONFIG.idleSpeed * dt / 1000; S.speed = CONFIG.idleSpeed * 16.7 / 1000;
+  } else if (!S.dragging) S.speed = 0;
+  Globe.render(now);
+}
+
+/** Povlačenje globusa mišem/prstom dok miruje. */
+function setupDrag() {
+  const cv = Globe.canvas; let px = 0, py = 0;
+  cv.addEventListener("pointerdown", e => {
+    if (S.phase !== "idle") return;
+    S.dragging = true; px = e.clientX; py = e.clientY; cv.setPointerCapture(e.pointerId); cv.classList.add("dragging");
+  });
+  cv.addEventListener("pointermove", e => {
+    if (!S.dragging) return;
+    const k = 90 / Globe.radius;
+    S.rot[0] += (e.clientX - px) * k; S.rot[1] = clamp(S.rot[1] - (e.clientY - py) * k, -80, 80);
+    S.speed = 0.5; px = e.clientX; py = e.clientY;
+  });
+  const end = () => { if (!S.dragging) return; S.dragging = false; S.lastDrag = performance.now(); S.speed = 0; Globe.invalidate(); cv.classList.remove("dragging"); };
+  cv.addEventListener("pointerup", end); cv.addEventListener("pointercancel", end);
+}
+
+/* =====================================================================
+   RASPORED (desktop / mobitel / 9:16) – računa veličine iz dimenzija okvira
+   ===================================================================== */
+function layout() {
+  const app = UI.app, W = app.clientWidth, H = app.clientHeight;
+  const portrait = settings.vertical || W / H < 1.05 || W < 720;
+  app.classList.toggle("portrait", portrait);
+  const clean = document.body.classList.contains("clean");
+  if (portrait) {
+    const u = clamp(Math.min(W / 100, H / (clean ? 186 : 200)), 2.4, 8);
+    app.style.setProperty("--u", u.toFixed(2) + "px");
+    app.style.setProperty("--cardH", Math.round(u * (clean ? 70 : 76)) + "px");
+  } else {
+    const cardW = clamp(W * 0.32, 330, 520);
+    app.style.setProperty("--cardW", Math.round(cardW) + "px");
+    app.style.setProperty("--u", clamp(Math.min(cardW / 100, H / 150), 3, 6).toFixed(2) + "px");
+  }
+  // Veličina globusa prema prostoru koji je ostao
+  const ga = UI.globeArea.getBoundingClientRect();
+  const s = Math.floor(Math.min(ga.width * 0.94, ga.height * (portrait ? 0.84 : 0.86)));
+  UI.holder.style.width = UI.holder.style.height = s + "px";
+  UI.holder.style.top = (ga.height / 2 + ga.height * 0.05) + "px";
+  Globe.resize(s);
+  if (!UI.card.hidden) fitCard();
+}
+
+/* =====================================================================
+   RUČNI UNOS, RESET, POSTAVKE
+   ===================================================================== */
+const norm = s => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/đ/g, "d");
+let manualFilter = "all";
+function buildManualList() {
+  const ul = $("manualList"); ul.innerHTML = "";
+  [...COUNTRIES].sort((a, b) => a.ime.localeCompare(b.ime, "hr")).forEach(c => {
+    const li = document.createElement("li"); li.dataset.id = c.id; li.dataset.q = norm(c.ime + " " + c.jelo + " " + c.izvorno);
+    li.innerHTML = `<label><input type="checkbox"><img class="mini-flag" loading="lazy" alt="" src="${CONFIG.flagSvg(c.iso2)}"><span>${c.ime}</span><span class="dish-hint">${c.emoji} ${c.jelo}</span></label>`;
+    li.querySelector("img").onerror = e => { e.target.outerHTML = `<span class="mini-emoji">${flagEmoji(c.iso2)}</span>`; };
+    li.querySelector("input").addEventListener("change", e => { setDone(c.id, e.target.checked); refreshManual(); });
+    ul.appendChild(li);
+  });
+}
+function refreshManual() {
+  const q = norm($("manualSearch").value.trim());
+  let shown = 0;
+  for (const li of $("manualList").children) {
+    const isDone = done.has(li.dataset.id);
+    li.classList.toggle("done", isDone); li.querySelector("input").checked = isDone;
+    const ok = (!q || li.dataset.q.includes(q)) && (manualFilter === "all" || (manualFilter === "done") === isDone);
+    li.hidden = !ok; if (ok) shown++;
+  }
+  $("manualInfo").textContent = `Odrađeno: ${done.size} / ${TOTAL}`;
+}
+function openModal(id) { $(id).hidden = false; }
+function closeModal(id) { $(id).hidden = true; }
+
+function askConfirm(title, text, yesLabel, onYes) {
+  $("confirmTitle").textContent = title; $("confirmText").textContent = text; $("confirmYes").textContent = yesLabel;
+  openModal("modalConfirm");
+  $("confirmYes").onclick = () => { closeModal("modalConfirm"); onYes(); };
+  $("confirmNo").onclick = () => closeModal("modalConfirm");
+}
+
+function applySettings() {
+  document.body.classList.toggle("vertical", settings.vertical);
+  document.body.classList.toggle("no-face", !settings.face);
+  $("btnVertical").setAttribute("aria-pressed", settings.vertical);
+  $("btnFace").setAttribute("aria-pressed", settings.face);
+  $("btnSound").setAttribute("aria-pressed", settings.sound);
+  $("btnSound").textContent = settings.sound ? "🔊" : "🔇";
+  Sound.mute(settings.sound);
+}
+function setClean(on) {
+  document.body.classList.toggle("clean", on);
+  $("btnClean").setAttribute("aria-pressed", on);
+  layout();
+  if (on) toast("🎬 Čisti prikaz – dvaput dodirni pozadinu ili pritisni H za izlaz", 2400);
+}
+
+function bindUI() {
+  UI.spinBtn.addEventListener("click", mainAction);
+  UI.doneBtn.addEventListener("click", () => { if (S.pick) { setDone(S.pick.id, !done.has(S.pick.id)); popButton(UI.doneBtn); } });
+  $("btnManual").addEventListener("click", () => { refreshManual(); openModal("modalManual"); setTimeout(() => $("manualSearch").focus(), 50); });
+  $("manualClose").addEventListener("click", () => closeModal("modalManual"));
+  $("manualSearch").addEventListener("input", refreshManual);
+  $("manualFilters").addEventListener("click", e => {
+    const b = e.target.closest(".chip"); if (!b) return;
+    manualFilter = b.dataset.f;
+    for (const x of $("manualFilters").querySelectorAll(".chip")) x.classList.toggle("active", x === b);
+    refreshManual();
+  });
+  $("btnResetList").addEventListener("click", () => {
+    if (!done.size) { toast("Popis je već prazan 🙂"); return; }
+    askConfirm("Obrisati popis?", `Sigurno želiš obrisati svih ${done.size} odrađenih država? Ovo se ne može poništiti.`, "Da, obriši", () => {
+      done.clear(); saveDone(); updateCounter(); Globe.recolor(); updateDoneButton(); toast("🗑️ Popis je obrisan – kreće nova runda!");
+    });
+  });
+  $("btnVertical").addEventListener("click", () => { settings.vertical = !settings.vertical; saveSettings(); applySettings(); layout(); });
+  $("btnClean").addEventListener("click", () => setClean(true));
+  $("exitClean").addEventListener("click", () => setClean(false));
+  $("btnFace").addEventListener("click", () => { settings.face = !settings.face; saveSettings(); applySettings(); });
+  $("btnSound").addEventListener("click", () => { settings.sound = !settings.sound; saveSettings(); applySettings(); if (settings.sound) Sound.ensure(); });
+  for (const m of document.querySelectorAll(".modal")) m.addEventListener("click", e => { if (e.target === m) m.hidden = true; });
+  UI.app.addEventListener("dblclick", e => {
+    if (document.body.classList.contains("clean") && !e.target.closest("button,canvas#globe")) setClean(false);
+  });
+  document.addEventListener("keydown", e => {
+    const modalOpen = [...document.querySelectorAll(".modal")].some(m => !m.hidden);
+    if (e.key === "Escape") {
+      if (modalOpen) document.querySelectorAll(".modal").forEach(m => m.hidden = true);
+      else if (document.body.classList.contains("clean")) setClean(false);
+      return;
+    }
+    if (modalOpen || /INPUT|TEXTAREA/.test(document.activeElement.tagName)) return;
+    if (e.key === " " || e.key === "Enter") {
+      if (document.activeElement && /^(BUTTON|A)$/.test(document.activeElement.tagName)) return;   // gumb sam reagira
+      e.preventDefault(); mainAction();
+    } else if (e.key === "h" || e.key === "H") setClean(!document.body.classList.contains("clean"));
+    else if ((e.key === "d" || e.key === "D") && S.pick && S.phase === "landed") setDone(S.pick.id, !done.has(S.pick.id));
+  });
+  new ResizeObserver(() => layout()).observe(UI.app);
+}
+
+/** Zvjezdice u pozadini. */
+function makeStars() {
+  const sky = $("sky");
+  for (let i = 0; i < 16; i++) {
+    const s = document.createElement("span");
+    s.className = "star"; s.textContent = i % 3 ? "✦" : "★";
+    s.style.left = rand(2, 96) + "%"; s.style.top = rand(2, 96) + "%";
+    s.style.animationDelay = rand(-3, 0) + "s"; s.style.fontSize = `calc(var(--u) * ${rand(2.2, 4.6).toFixed(1)})`;
+    sky.appendChild(s);
+  }
+}
+
+/* =====================================================================
+   POKRETANJE
+   ===================================================================== */
+async function init() {
+  makeStars(); applySettings(); updateCounter(); buildManualList(); bindUI(); layout();
+  if (!window.d3 || !window.topojson) {
+    $("loading").innerHTML = "😕 Ne mogu učitati biblioteke (D3/TopoJSON).<br>Provjeri internetsku vezu i osvježi stranicu.";
+    return;
+  }
+  setupDrag();
+  try {
+    const res = await fetch(CONFIG.atlasUrl);
+    if (!res.ok) throw new Error(res.status);
+    Globe.prepare(await res.json());
+  } catch (err) {
+    console.error(err);
+    $("loading").innerHTML = "😕 Ne mogu učitati kartu svijeta.<br>Provjeri internetsku vezu i osvježi stranicu.";
+    return;
+  }
+  $("loading").hidden = true;
+  S.phase = "idle"; setSpinLabel(); Globe.invalidate();
+  d3.timer(frame);
+  // Kontrola podataka: upozori u konzoli ako neki unos nema sva polja.
+  COUNTRIES.forEach(c => ["id", "iso2", "ime", "jelo", "izvorno", "emoji", "opis"].forEach(k => { if (!c[k]) console.warn("Prazno polje", k, c); }));
+}
+init();
+</script>
+</body>
+</html>
