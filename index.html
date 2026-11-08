@@ -319,6 +319,17 @@ body.clean .exit-clean{display:block}
 .vempty{opacity:.6;font-size:15px;padding:4px}
 .switch{display:flex;align-items:center;gap:10px;font-weight:600;font-size:16px;margin-top:10px;cursor:pointer}
 .switch input{width:22px;height:22px;accent-color:var(--green-dark);flex:0 0 auto}
+/* Kontinent */
+body.continent .face{opacity:0}
+.cont-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:12px;overflow:auto;padding:2px 2px 8px}
+.cont-btn{display:flex;flex-direction:column;align-items:center;gap:2px;padding:12px 8px;border:3px solid var(--ink);border-radius:18px;
+  background:#fff;box-shadow:0 4px 0 var(--ink);transition:transform .08s,box-shadow .08s,background .2s;text-align:center}
+.cont-btn:hover{background:#FFF6D6}
+.cont-btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
+.cont-btn.active{background:var(--yellow)}
+.cont-btn .ce{font-size:34px;line-height:1.1}
+.cont-btn .cn{font-weight:700;font-size:16px;line-height:1.15}
+.cont-btn .ci{font-size:13px;opacity:.75;line-height:1.35}
 @media (prefers-reduced-motion:reduce){.cloud,.star,.btn-spin,.ph-icon,.dish-emoji span{animation:none!important}}
 </style>
 </head>
@@ -335,9 +346,11 @@ body.clean .exit-clean{display:block}
     <div class="stats" title="Koliko si država već skuhao">
       <div class="counter">Odrađeno: <b id="doneCount">0</b> / <b id="totalCount">195</b></div>
       <div class="progress"><div id="progressBar"></div></div>
+      <div class="viewer-badge" id="continentBadge" hidden></div>
       <div class="viewer-badge" id="viewerBadge" hidden></div>
     </div>
     <nav class="toolbar hide-in-clean" aria-label="Alati">
+      <button class="tool" id="btnContinent" aria-pressed="false" title="Biraj samo države s jednog kontinenta">🗺️ <span>Kontinent</span></button>
       <button class="tool" id="btnViewers" aria-pressed="false" title="Gledatelji biraju: globus bira samo između država iz komentara">💬 <span>Gledatelji</span></button>
       <button class="tool" id="btnManual" title="Ručno označi države koje si već napravio">📝 <span>Ručni unos</span></button>
       <button class="tool" id="btnResetList" title="Obriši popis odrađenih država">🗑️ <span>Reset liste</span></button>
@@ -452,6 +465,16 @@ body.clean .exit-clean{display:block}
   </div>
 </div>
 
+<!-- ===== MODAL: kontinent ===== -->
+<div class="modal" id="modalContinent" hidden>
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="contTitle">
+    <h3 id="contTitle">🗺️ Biraj samo s jednog kontinenta</h3>
+    <p>Globus se uveća na odabrani kontinent, a umjesto vrtnje svjetlo skakuće po državama dok ne stane na jednoj.</p>
+    <div class="cont-grid" id="contGrid"></div>
+    <div class="modal-actions"><button class="btn btn-green" id="contClose">Gotovo 👍</button></div>
+  </div>
+</div>
+
 <!-- ===== MODAL: gledatelji biraju ===== -->
 <div class="modal" id="modalViewers" hidden>
   <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="viewersTitle">
@@ -493,6 +516,22 @@ const CONFIG = {
 
   // Udaljenost na kartici se računa od ovog mjesta (ime u genitivu: "od Zagreba")
   home: { id: "191", ime: "Zagreba", coords: [15.98, 45.81] },
+
+  // Kontinenti: koji kodovi iz FACTS pripadaju kontinentu, središte pogleda [dužina, širina] i uvećanje.
+  // Rusija i Turska (EA) su i u Europi i u Aziji.
+  continents: {
+    E: { ime: "Europa",                     emoji: "🏰", codes: ["E", "EA"],      center: [15, 52],   zoom: 2.2 },
+    A: { ime: "Azija",                      emoji: "🏯", codes: ["A", "EA"],      center: [87, 22],   zoom: 1.15 },
+    F: { ime: "Afrika",                     emoji: "🦁", codes: ["F"],            center: [16, -4],   zoom: 1.25 },
+    N: { ime: "Sjeverna i Srednja Amerika", emoji: "🗽", codes: ["N", "M", "C"],  center: [-85, 35],  zoom: 1.5 },
+    S: { ime: "Južna Amerika",              emoji: "🦙", codes: ["S"],            center: [-60, -21], zoom: 1.65 },
+    O: { ime: "Oceanija",                   emoji: "🐨", codes: ["O"],            center: [160, -14], zoom: 1.25 },
+  },
+  // "Svjetlo koje skakuće" (način Kontinent)
+  hopMinDuration: 4500,   // ms
+  hopMaxDuration: 5500,   // ms
+  hopFirst: 45,           // ms – razmak prvih (brzih) skokova
+  hopLast: 750,           // ms – razmak zadnjeg (najsporijeg) skoka
 
   // Vrtnja
   minDuration: 4400,      // ms – najkraće trajanje vrtnje
@@ -829,7 +868,7 @@ function saveJSON(key, value) { try { localStorage.setItem(key, JSON.stringify(v
    STANJE APLIKACIJE
    ===================================================================== */
 const done = new Set(loadJSON(STORE_DONE, []).filter(id => BY_ID.has(id)));
-const settings = Object.assign({ sound: true, face: true, vertical: false, viewerOn: false, viewerWeighted: false }, loadJSON(STORE_SETTINGS, {}));
+const settings = Object.assign({ sound: true, face: true, vertical: false, viewerOn: false, viewerWeighted: false, continent: null }, loadJSON(STORE_SETTINGS, {}));
 const saveDone = () => saveJSON(STORE_DONE, [...done]);
 const saveSettings = () => saveJSON(STORE_SETTINGS, settings);
 
@@ -842,6 +881,8 @@ const S = {
   landedAt: 0,           // trenutak zaustavljanja (ms)
   timers: [],            // setTimeout-i slijeda nakon zaustavljanja
   dragging: false, lastDrag: 0,
+  zoom: 1,               // uvećanje karte (kontinent > 1)
+  viewAnim: null,        // glatki prijelaz pogleda (okretanje + zumiranje)
 };
 
 /* =====================================================================
@@ -884,7 +925,6 @@ const Globe = (() => {
   const canvas = $("globe"), ctx = canvas.getContext("2d");
   const baseCanvas = document.createElement("canvas"), baseCtx = baseCanvas.getContext("2d");
   const overCanvas = document.createElement("canvas"), overCtx = overCanvas.getContext("2d");
-  const projection = window.d3 ? d3.geoOrthographic().clipAngle(90).precision(0) : null;   // za pinove i provjeru vidljivosti
   const RAD = Math.PI / 180, EARTH_KM2 = 6371 * 6371;
   let size = 0, dpr = 1, R = 1, scaleK = 1;
   let world = null;
@@ -920,6 +960,7 @@ const Globe = (() => {
 
   /* ----- Brza ortografska projekcija ----- */
   let m00, m01, m02, m10, m11, m20, m21, m22, tx, ty, tol = 0.6;
+  let zoom = 1, Rp = 1;      // zoom > 1 = uvećani prikaz (kontinent); karta se tada reže na krug globusa
   function setView() {
     const l = S.rot[0] * RAD, p = S.rot[1] * RAD, cl = Math.cos(l), sl = Math.sin(l), cp = Math.cos(p), sp = Math.sin(p);
     // Ista rotacija kao d3.geoOrthographic().rotate([λ, φ]): X = dubina, Y = desno, Z = gore
@@ -927,7 +968,7 @@ const Globe = (() => {
     m10 = sl;      m11 = cl;
     m20 = cl * sp; m21 = -sl * sp; m22 = cp;
     tx = size / 2; ty = size / 2;
-    projection.rotate(S.rot);
+    zoom = S.zoom || 1; Rp = R * zoom;
   }
   /** Projicira prsten u scratch; vraća broj točaka (0 = ništa nije vidljivo). Točke iza ruba "lijepe" se na rub. */
   function projectRing(r) {
@@ -937,11 +978,18 @@ const Globe = (() => {
     for (let i = 0, j = 0; i < n; i++, j += 3) {
       const x = a[j], y = a[j + 1], z = a[j + 2];
       const X = m00 * x + m01 * y + m02 * z, Y = m10 * x + m11 * y, Z = m20 * x + m21 * y + m22 * z;
-      if (X > 0) { s[j] = tx + R * Y; s[j + 1] = ty - R * Z; anyVisible = true; }
-      else { const L = Math.hypot(Y, Z) || 1; s[j] = tx + R * Y / L; s[j + 1] = ty - R * Z / L; }
+      if (X > 0) { s[j] = tx + Rp * Y; s[j + 1] = ty - Rp * Z; anyVisible = true; }
+      else { const L = Math.hypot(Y, Z) || 1; s[j] = tx + Rp * Y / L; s[j + 1] = ty - Rp * Z / L; }
       s[j + 2] = X;
     }
     return anyVisible ? n : 0;
+  }
+  /** Projekcija jedne točke [dužina, širina] → [x, y, vidljiva?] (za točkice i pinove). */
+  function projPt(pt) {
+    const l = pt[0] * RAD, p = pt[1] * RAD, cp = Math.cos(p);
+    const x = cp * Math.cos(l), y = cp * Math.sin(l), z = Math.sin(p);
+    const X = m00 * x + m01 * y + m02 * z, Y = m10 * x + m11 * y, Z = m20 * x + m21 * y + m22 * z;
+    return [tx + Rp * Y, ty - Rp * Z, X > 0.03 && (Y * Y + Z * Z) * zoom * zoom < 0.94];
   }
   /** Dodaje zatvoreni prsten (za ispunu) u trenutni path. */
   function addRing(c, r) {
@@ -972,7 +1020,7 @@ const Globe = (() => {
     let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
     for (const r of rings) {
       const n = projectRing(r);
-      for (let j = 0; j < n * 3; j += 3) if (scratch[j + 2] > 0) {
+      for (let j = 0; j < n * 3; j += 3) if (scratch[j + 2] > 0 && (scratch[j] - tx) ** 2 + (scratch[j + 1] - ty) ** 2 <= R * R) {   // samo vidljivi dio
         x0 = Math.min(x0, scratch[j]); x1 = Math.max(x1, scratch[j]); y0 = Math.min(y0, scratch[j + 1]); y1 = Math.max(y1, scratch[j + 1]);
       }
     }
@@ -1048,7 +1096,7 @@ const Globe = (() => {
   /** Boje država (grupirane po boji radi bržeg crtanja). Poziva se i kad se promijeni popis odrađenih. */
   function recolor() {
     if (!world) return;
-    const groups = new Map(), inPlay = viewerActiveSet();   // null = sve države su u igri
+    const groups = new Map(), inPlay = activeSet();   // null = sve države su u igri
     for (const fi of world.featureInfo) {
       let color;
       if (fi.id === "010") color = CONFIG.iceColor;                 // Antarktika
@@ -1072,12 +1120,10 @@ const Globe = (() => {
     scaleK = clamp(R / 300, 0.55, 1.5);
     for (const c of [canvas, baseCanvas, overCanvas]) { c.width = Math.round(size * dpr); c.height = Math.round(size * dpr); }
     canvas.style.width = canvas.style.height = size + "px";
-    if (projection) projection.scale(R).translate([size / 2, size / 2]);
     drawOverlay();
     baseValid = false; dirty = true;
   }
   const lw = x => x * scaleK;
-  const isVisible = pt => d3.geoDistance(pt, [-S.rot[0], -S.rot[1]]) < Math.PI / 2 - 0.03;
 
   /* ----- Crtanje ----- */
   function drawBase(c) {
@@ -1088,6 +1134,8 @@ const Globe = (() => {
     const g = c.createRadialGradient(m - R * 0.28, m - R * 0.4, R * 0.05, m, m, R * 1.05);
     g.addColorStop(0, CONFIG.oceanTop); g.addColorStop(0.55, CONFIG.oceanMid); g.addColorStop(1, CONFIG.oceanEdge);
     c.beginPath(); c.arc(m, m, R, 0, Math.PI * 2); c.fillStyle = g; c.fill();
+    c.save();
+    if (zoom > 1.001) { c.beginPath(); c.arc(m, m, R, 0, Math.PI * 2); c.clip(); }   // uvećana karta ostaje unutar lopte
     // Valići
     c.beginPath(); for (const r of world.waves) addLine(c, r);
     c.strokeStyle = "rgba(255,255,255,.8)"; c.lineWidth = lw(2.8); c.stroke();
@@ -1103,16 +1151,17 @@ const Globe = (() => {
     c.beginPath(); for (const r of world.coast) addLine(c, r); c.lineWidth = lw(CONFIG.coastWidth); c.stroke();
     // Točkice za male države (Vatikan, Monako, Malta, otočne države…)
     c.lineWidth = lw(1.8);
+    const inPlay = activeSet();
     for (const info of world.smallList) {
-      if (!isVisible(info.center)) continue;
-      const [x, y] = projection(info.center);
+      const [x, y, vis] = projPt(info.center);
+      if (!vis) continue;
       c.beginPath(); c.arc(x, y, lw(4.2), 0, Math.PI * 2);
-      const inPlay = viewerActiveSet();
       c.fillStyle = done.has(info.country.id) ? CONFIG.doneColor
         : (inPlay && !inPlay.has(info.country.id)) ? CONFIG.outOfPlayColor
         : (info.idxs.length ? world.featureInfo[info.idxs[0]].color : CONFIG.landColors[0]);
       c.fill(); c.stroke();
     }
+    c.restore();
   }
 
   /** Sjenčanje lopte, sjajni highlight gore lijevo i obrub – ne ovisi o rotaciji, pa se crta samo jednom. */
@@ -1144,6 +1193,7 @@ const Globe = (() => {
     // "Reflektor": ostatak globusa lagano izblijedi
     c.beginPath(); c.arc(m, m, R, 0, Math.PI * 2); c.fillStyle = `rgba(255,255,255,${0.3 * smoothstep(ms / 400)})`; c.fill();
     if (info.rings.length) {
+      c.save(); c.beginPath(); c.arc(m, m, R, 0, Math.PI * 2); c.clip();   // (u uvećanom prikazu) ne izlazi iz lopte
       c.lineJoin = "round"; c.lineCap = "round";
       c.beginPath(); for (const r of info.rings) addRing(c, r);
       // 1) pulsirajući sjaj ispod, 2) žuta ispuna, 3) tamni obrub
@@ -1154,7 +1204,7 @@ const Globe = (() => {
       c.fillStyle = CONFIG.pickColor; c.fill();
       const img = flagImages.get(S.pick.iso2);
       const fa = smoothstep((ms - CONFIG.flagFillAt) / 350) * (1 - smoothstep((ms - CONFIG.flagFillUntil) / 450));
-      if (fa > 0.01 && img && img.complete && img.naturalWidth && !info.small) {
+      if (fa > 0.01 && img && img.complete && img.naturalWidth && info.area * zoom * zoom >= CONFIG.smallAreaKm2) {
         const [[x0, y0], [x1, y1]] = ringsBounds(world.featureInfo[info.main].rings);
         const w = x1 - x0, h = y1 - y0, k = Math.max(w / img.naturalWidth, h / img.naturalHeight);
         if (isFinite(k) && k > 0) {
@@ -1164,8 +1214,41 @@ const Globe = (() => {
         }
       }
       c.strokeStyle = CONFIG.ink; c.lineWidth = lw(2.4); c.stroke();
+      c.restore();
     }
-    if (info.needsPin) drawPin(c, projection(info.center), t);
+    if (info.needsPin && info.area * zoom * zoom < CONFIG.pinAreaKm2) drawPin(c, projPt(info.center), t);   // uvećane države ne trebaju pin
+  }
+
+  /** "Svjetlo koje skakuće" (način Kontinent): trenutna država jako svijetli, prethodna se gasi. */
+  function drawHop(c, now) {
+    const sp = S.spin;
+    if (!sp || sp.type !== "hop" || sp.idx < 0) return;
+    setView();
+    const m = size / 2;
+    c.save(); c.beginPath(); c.arc(m, m, R, 0, Math.PI * 2); c.clip();
+    c.lineJoin = "round"; c.lineCap = "round";
+    const lit = (country, a, glow) => {
+      if (a <= 0.01) return;
+      const info = world.infoById.get(country.id);
+      c.globalAlpha = a;
+      if (info.rings.length && !info.small) {
+        c.beginPath(); for (const r of info.rings) addRing(c, r);
+        c.save(); c.shadowColor = "rgba(255,200,0,0.95)"; c.shadowBlur = lw(6 + 12 * glow);
+        c.strokeStyle = "#FFF6B0"; c.lineWidth = lw(4 + 5 * glow); c.stroke(); c.restore();
+        c.fillStyle = CONFIG.pickColor; c.fill();
+        c.strokeStyle = CONFIG.ink; c.lineWidth = lw(2.2); c.stroke();
+      } else {                                               // male države: svjetleći krug
+        const [x, y] = projPt(info.center);
+        c.beginPath(); c.arc(x, y, lw(9 + 5 * glow), 0, Math.PI * 2);
+        c.fillStyle = CONFIG.pickColor; c.shadowColor = "rgba(255,200,0,0.95)"; c.shadowBlur = lw(10);
+        c.fill(); c.shadowBlur = 0; c.strokeStyle = CONFIG.ink; c.lineWidth = lw(2.4); c.stroke();
+      }
+      c.globalAlpha = 1;
+    };
+    const since = now - sp.hopAt;
+    if (sp.idx > 0) lit(sp.seq[sp.idx - 1], 1 - since / 160, 0);       // prethodna se gasi
+    lit(sp.seq[sp.idx], 1, 1 - clamp(since / 250, 0, 1));            // trenutna bljesne
+    c.restore();
   }
 
   function drawPin(c, [x, y], t) {
@@ -1191,7 +1274,7 @@ const Globe = (() => {
   function render(now) {
     if (!world || !size) return;
     const moving = S.speed > 0.0001;
-    if (!dirty && !moving && S.phase !== "landed") return;
+    if (!dirty && !moving && S.phase !== "landed" && S.phase !== "spinning") return;
     dirty = false;
     const W = canvas.width;
     ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, W, W);
@@ -1213,6 +1296,7 @@ const Globe = (() => {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     tol = CONFIG.detailPx[0];
     drawPick(ctx, now);
+    drawHop(ctx, now);
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.drawImage(overCanvas, 0, 0);
   }
@@ -1240,8 +1324,6 @@ const STORE_VIEWERS = "zavrtiGlobus.gledatelji";
 const viewers = new Map(Object.entries(loadJSON(STORE_VIEWERS, {})).filter(([id, v]) => BY_ID.has(id) && v > 0));   // id → broj glasova
 const saveViewers = () => saveJSON(STORE_VIEWERS, Object.fromEntries(viewers));
 
-/** Skup država koje su trenutno "u igri" (null = sve države). */
-function viewerActiveSet() { return settings.viewerOn && viewers.size ? new Set(viewers.keys()) : null; }
 
 /** Hrvatska množina: plural(n, "glas", "glasa", "glasova"). */
 function plural(n, one, few, many) {
@@ -1344,15 +1426,20 @@ function renderViewerList() {
   $("viewerOn").checked = settings.viewerOn;
   $("viewerWeighted").checked = settings.viewerWeighted;
 }
-function updateViewerBadge() {
-  const b = $("viewerBadge"), n = viewers.size, wasHidden = b.hidden;
+/** Oznake ispod brojača: uključeni načini (gledatelji, kontinent). */
+function updateBadges() {
+  const b = $("viewerBadge"), cb = $("continentBadge"), n = viewers.size, before = b.hidden + "" + cb.hidden;
   $("btnViewers").setAttribute("aria-pressed", settings.viewerOn);
   b.hidden = !settings.viewerOn;
   b.textContent = n ? `💬 Gledatelji biraju · ${n} ${plural(n, "prijedlog", "prijedloga", "prijedloga")}` : "💬 Gledatelji biraju · dodaj prijedloge";
-  if (wasHidden !== b.hidden) layout();   // zaglavlje je promijenilo visinu
+  const code = activeContinent();
+  $("btnContinent").setAttribute("aria-pressed", !!code);
+  cb.hidden = !code;
+  if (code) cb.textContent = `🗺️ Kontinent: ${CONFIG.continents[code].ime}`;
+  if (before !== b.hidden + "" + cb.hidden) layout();   // zaglavlje je promijenilo visinu
 }
 function onViewersChanged() {
-  saveViewers(); saveSettings(); renderViewerList(); updateViewerBadge(); Globe.recolor();
+  saveViewers(); saveSettings(); renderViewerList(); updateBadges(); Globe.recolor();
 }
 
 function bindViewers() {
@@ -1401,6 +1488,127 @@ function renderFacts(c) {
   const votes = settings.viewerOn ? viewers.get(c.id) : 0;
   $("cardVotes").hidden = !votes;
   if (votes) $("cardVotes").textContent = `💬 Prijedlog gledatelja · ${votes} ${plural(votes, "glas", "glasa", "glasova")}`;
+}
+
+/* =====================================================================
+   KONTINENT – izvlačenje samo s jednog kontinenta
+   Globus se glatko okrene i uveća na kontinent, a umjesto vrtnje
+   "svjetlo" skakuće po državama i postupno usporava (kao lampice na ruletu).
+   Pogledi (središte i zoom) svakog kontinenta su u CONFIG.continents.
+   ===================================================================== */
+const continentCache = new Map();
+/** ID-jevi država jednog kontinenta (prema kodovima kontinenta u FACTS). */
+function continentSet(code) {
+  if (!continentCache.has(code)) {
+    const codes = CONFIG.continents[code].codes;
+    continentCache.set(code, new Set(COUNTRIES.filter(c => codes.includes(FACTS[c.id][1])).map(c => c.id)));
+  }
+  return continentCache.get(code);
+}
+const activeContinent = () => (settings.continent && CONFIG.continents[settings.continent]) ? settings.continent : null;
+
+/** Države "u igri" prema svim uključenim filtrima (gledatelji, kontinent); null = sve države. */
+function activeSet() {
+  let set = settings.viewerOn && viewers.size ? new Set(viewers.keys()) : null;
+  const code = activeContinent();
+  if (code) {
+    const cs = continentSet(code);
+    set = set ? new Set([...set].filter(id => cs.has(id))) : cs;
+  }
+  return set;
+}
+
+/* ----- Glatki prijelaz pogleda: okretanje + zumiranje ----- */
+function continentView(code) {
+  const v = CONFIG.continents[code];
+  return { rot: [-v.center[0], -v.center[1]], zoom: v.zoom };
+}
+function animateView(rot, zoom, ms = 1300) {
+  const dl = ((rot[0] - S.rot[0]) % 360 + 540) % 360 - 180;      // najkraći put oko globusa
+  S.viewAnim = { start: performance.now(), ms, l0: S.rot[0], p0: S.rot[1], z0: S.zoom, dl, dp: rot[1] - S.rot[1], dz: zoom - S.zoom };
+  setSpinLabel();
+}
+function tickView(now) {
+  const v = S.viewAnim, t = clamp((now - v.start) / v.ms, 0, 1), e = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  S.rot[0] = v.l0 + v.dl * e; S.rot[1] = v.p0 + v.dp * e; S.zoom = v.z0 + v.dz * e;
+  S.speed = 1;                                                    // crtaj svaki kadar dok traje prijelaz
+  if (t >= 1) { S.viewAnim = null; S.speed = 0; Globe.invalidate(); setSpinLabel(); }
+}
+
+/** Uključi kontinent (kod iz CONFIG.continents) ili ga isključi (null = cijeli svijet i vrtnja). */
+function setContinent(code) {
+  if (S.phase === "spinning" || S.phase === "loading") return;
+  if (S.phase === "landed") clearResult();
+  settings.continent = code || null; saveSettings();
+  document.body.classList.toggle("continent", !!code);
+  updateBadges(); Globe.recolor(); idlePlaceholder(); renderContinentGrid();
+  if (code) { const v = continentView(code); animateView(v.rot, v.zoom); }
+  else animateView([S.rot[0], -22], 1);
+}
+
+/* ----- "Svjetlo koje skakuće" ----- */
+function startHop(country, pool) {
+  const D = rand(CONFIG.hopMinDuration, CONFIG.hopMaxDuration), a = CONFIG.hopFirst, last = CONFIG.hopLast, p = 3;
+  // Razmaci između skokova rastu od hopFirst do hopLast ms (brzo → sve sporije), ukupno točno D ms.
+  const H = clamp(Math.round(D / (a + (last - a) / (p + 1))) + 1, 12, 45);
+  const gaps = [];
+  for (let k = 0; k < H - 1; k++) gaps.push(a + (last - a) * Math.pow(k / Math.max(1, H - 2), p));
+  const sum = gaps.reduce((x, y) => x + y, 0), times = [0];
+  for (const g of gaps) times.push(times[times.length - 1] + g * D / sum);
+  // Redoslijed: nasumične države, bez ponavljanja zaredom; zadnja je izvučena država.
+  // (Sama država je već odabrana ravnomjerno – ovo je samo predstava.)
+  const seq = []; let prev = null;
+  for (let k = 0; k < H - 1; k++) {
+    let c = pool[randomIndex(pool.length)];
+    for (let tries = 0; pool.length > 1 && (c === prev || (k === H - 2 && c === country)) && tries < 30; tries++) c = pool[randomIndex(pool.length)];
+    seq.push(c); prev = c;
+  }
+  seq.push(country);
+  S.spin = { type: "hop", start: performance.now() + 30, duration: D, seq, times, idx: -1, hopAt: 0, country };
+  Sound.hops(times);
+}
+function tickHop(now) {
+  const sp = S.spin, el = now - sp.start;
+  while (sp.idx + 1 < sp.seq.length && sp.times[sp.idx + 1] <= el) {
+    sp.idx++; sp.hopAt = sp.start + sp.times[sp.idx];
+    UI.phTitle.textContent = sp.seq[sp.idx].ime;                   // ime trenutne države na kartici
+  }
+  S.speed = 0;
+  if (el >= sp.duration) { S.spin = null; land(now); }
+}
+
+/* ----- Sučelje ----- */
+function idlePlaceholder() {
+  const code = activeContinent(), v = code && CONFIG.continents[code];
+  setPlaceholder(v ? v.emoji : "❓", "Koje jelo te čeka?",
+    v ? `Pritisni <b>ZAVRTI!</b> i svjetlo bira državu: <b>${v.ime}</b>.` : "Pritisni <b>ZAVRTI!</b> i globus će odabrati državu.");
+}
+function renderContinentGrid() {
+  const grid = $("contGrid");
+  grid.innerHTML = "";
+  const opts = [[null, "🌐", "Cijeli svijet", "Globus se vrti"]];
+  for (const [code, v] of Object.entries(CONFIG.continents)) {
+    const set = continentSet(code); let d = 0; set.forEach(id => { if (done.has(id)) d++; });
+    opts.push([code, v.emoji, v.ime, `${set.size} ${plural(set.size, "država", "države", "država")}<br>✅ odrađeno: ${d}`]);
+  }
+  for (const [code, emoji, name, info] of opts) {
+    const b = document.createElement("button");
+    b.className = "cont-btn" + (activeContinent() === code ? " active" : "");
+    b.innerHTML = `<span class="ce">${emoji}</span><span class="cn">${name}</span><span class="ci">${info}</span>`;
+    b.onclick = () => { closeModal("modalContinent"); if (activeContinent() !== code) setContinent(code); };
+    grid.appendChild(b);
+  }
+}
+function bindContinent() {
+  $("btnContinent").addEventListener("click", () => { renderContinentGrid(); openModal("modalContinent"); });
+  $("contClose").addEventListener("click", () => closeModal("modalContinent"));
+}
+/** Postavi pogled odmah (bez animacije) – kod pokretanja ako je kontinent zapamćen. */
+function applyContinentInstant() {
+  const code = activeContinent();
+  document.body.classList.toggle("continent", !!code);
+  if (code) { const v = continentView(code); S.rot[0] = v.rot[0]; S.rot[1] = v.rot[1]; S.zoom = v.zoom; }
+  idlePlaceholder();
 }
 
 /* =====================================================================
@@ -1481,7 +1689,19 @@ const Sound = (() => {
     src.connect(hp).connect(g).connect(master); src.start(t + 0.16, 0, 1);
   }
 
-  return { ensure, spin, pop, tada, mute(on) { if (master) master.gain.value = on ? 0.8 : 0; } };
+  /** "Blip" za svaki skok svjetla – veseli pentatonski niz tonova. */
+  function hops(times) {
+    if (!ensure()) return;
+    const t0 = ac.currentTime + 0.03, notes = [523.25, 587.33, 659.25, 783.99, 880, 1046.5];
+    times.forEach((ms, k) => {
+      const t = t0 + ms / 1000, o = ac.createOscillator(), g = ac.createGain(), last = k === times.length - 1;
+      o.type = "triangle"; o.frequency.setValueAtTime(notes[k % notes.length], t);
+      env(g, t, last ? 0.3 : 0.18, 0.004, last ? 0.25 : 0.09);
+      o.connect(g).connect(master); o.start(t); o.stop(t + 0.35);
+    });
+  }
+
+  return { ensure, spin, hops, pop, tada, mute(on) { if (master) master.gain.value = on ? 0.8 : 0; } };
 })();
 
 /* =====================================================================
@@ -1570,7 +1790,7 @@ function setDone(id, on) {
 function setSpinLabel() {
   UI.spinBtn.textContent = S.phase === "landed" ? "ZAVRTI PONOVO!" : "ZAVRTI!";
   UI.spinBtn.classList.toggle("small", S.phase === "landed");
-  UI.spinBtn.disabled = S.phase === "spinning" || S.phase === "loading";
+  UI.spinBtn.disabled = S.phase === "spinning" || S.phase === "loading" || !!S.viewAnim;
 }
 function setPlaceholder(icon, title, text) { UI.phIcon.textContent = icon; UI.phTitle.textContent = title; UI.phText.innerHTML = text; }
 
@@ -1580,8 +1800,9 @@ function setPlaceholder(icon, title, text) { UI.phIcon.textContent = icon; UI.ph
 /** Države koje se mogu izvući: neodrađene, a u načinu "Gledatelji biraju" samo predložene. */
 function availablePool() {
   const ok = c => !done.has(c.id) && Globe.world.infoById.has(c.id);
-  if (settings.viewerOn) return [...viewers.keys()].map(id => BY_ID.get(id)).filter(ok);
-  return COUNTRIES.filter(ok);
+  const set = activeSet();                           // gledatelji i/ili kontinent
+  if (settings.viewerOn) return [...viewers.keys()].filter(id => !set || set.has(id)).map(id => BY_ID.get(id)).filter(ok);
+  return COUNTRIES.filter(c => (!set || set.has(c.id)) && ok(c));
 }
 /** Ravnomjeran odabir po državama; opcionalno (gledatelji) po broju glasova. */
 function pickCountry(pool) {
@@ -1594,13 +1815,25 @@ function pickCountry(pool) {
 }
 
 function startSpin() {
-  if (S.phase !== "idle") return;
-  const pool = availablePool();
+  if (S.phase !== "idle" || S.viewAnim) return;
+  const pool = availablePool(), code = activeContinent();
   if (!pool.length) {
-    toast(settings.viewerOn ? "💬 Nema neodrađenih prijedloga gledatelja – dodaj nove!" : "🎉 Sve države su odrađene! Resetiraj listu za novu rundu.");
+    toast(settings.viewerOn ? (code ? "💬 Nema neodrađenih prijedloga s ovog kontinenta – dodaj nove!" : "💬 Nema neodrađenih prijedloga gledatelja – dodaj nove!")
+      : code ? `🎉 ${CONFIG.continents[code].ime} je odrađena! Odaberi drugi kontinent.` : "🎉 Sve države su odrađene! Resetiraj listu za novu rundu.");
     return;
   }
   const country = pickCountry(pool);
+  S.pick = country; S.phase = "spinning";
+  Globe.preloadFlag(country.iso2);
+  new Image().src = CONFIG.flagSvg(country.iso2);          // predučitaj i SVG za balon/karticu
+  setSpinLabel(); popButton(UI.spinBtn);
+  UI.placeholder.classList.add("dim");
+  $("spinBanner").classList.toggle("show", settings.viewerOn);
+  if (code) {                                              // način Kontinent: svjetlo skakuće
+    setPlaceholder("🎯", "…", settings.viewerOn ? "👇 Pogodi u komentarima!" : `Biram državu: ${CONFIG.continents[code].ime}`);
+    startHop(country, pool);
+    return;
+  }
   const info = Globe.world.infoById.get(country.id);
   const [lon, lat] = info.center;
   const turns = CONFIG.minTurns + randomIndex(CONFIG.maxTurns - CONFIG.minTurns + 1);
@@ -1608,18 +1841,14 @@ function startSpin() {
   const l0 = S.rot[0], p0 = S.rot[1];
   const delta = (((-lon - l0) % 360) + 360) % 360;       // ostatak do cilja
   S.spin = { start: performance.now(), duration, l0, p0, total: delta + 360 * turns, pT: -lat, country };
-  S.pick = country; S.phase = "spinning";
-  Globe.preloadFlag(country.iso2);
-  new Image().src = CONFIG.flagSvg(country.iso2);          // predučitaj i SVG za balon/karticu
   Sound.spin(S.spin.total, duration);
-  setMood("dizzy"); setSpinLabel(); popButton(UI.spinBtn);
-  UI.placeholder.classList.add("dim");
+  setMood("dizzy");
   if (settings.viewerOn) setPlaceholder("👇", "Pogodi u komentarima!", `U igri: ${pool.length} ${plural(pool.length, "država", "države", "država")} iz komentara`);
   else setPlaceholder("🤔", "Vrtim, vrtim…", "Gdje ćemo stati?");
-  $("spinBanner").classList.toggle("show", settings.viewerOn);
 }
 
 function tickSpin(now) {
+  if (S.spin.type === "hop") return tickHop(now);
   const sp = S.spin, t = clamp((now - sp.start) / sp.duration, 0, 1), e = EASE(t);
   S.rot[0] = sp.l0 + sp.total * e;
   S.rot[1] = sp.p0 + (sp.pT - sp.p0) * e;
@@ -1688,17 +1917,23 @@ function fitCard() {
 }
 
 /** "Zavrti ponovo": kartica i balon glatko odlaze, globus se vraća i odmah kreće nova vrtnja. */
-function respin() {
-  if (S.phase !== "landed") return;
+/** Makne rezultat (kartica i balon glatko odlaze) i vrati aplikaciju u stanje mirovanja. */
+function clearResult(then) {
   S.timers.forEach(clearTimeout); S.timers = [];
   UI.balloon.classList.remove("show"); UI.balloon.classList.add("hide");
   if (!UI.card.hidden) { UI.card.classList.remove("enter"); UI.card.classList.add("leave"); }
   S.phase = "idle"; S.pick = null; Globe.invalidate(); setMood("idle"); setSpinLabel();
+  UI.placeholder.classList.remove("dim"); idlePlaceholder();
   setTimeout(() => {
     UI.card.hidden = true; UI.card.classList.remove("leave");
     UI.placeholder.hidden = false;
-    startSpin();
+    if (then) then();
   }, 380);
+}
+/** "Zavrti ponovo": makne rezultat i odmah krene novo izvlačenje. */
+function respin() {
+  if (S.phase !== "landed") return;
+  clearResult(startSpin);
 }
 function mainAction() {
   Sound.ensure();
@@ -1712,8 +1947,10 @@ function mainAction() {
 let lastT = 0;
 function frame(elapsed) {
   const now = performance.now(), dt = Math.min(50, now - (lastT || now)); lastT = now;
+  if (S.viewAnim) tickView(now);
   if (S.phase === "spinning") tickSpin(now);
-  else if (S.phase === "idle" && !S.dragging && CONFIG.idleSpeed && now - S.lastDrag > 1500) {
+  else if (S.viewAnim) { /* prijelaz pogleda je već postavio rotaciju */ }
+  else if (S.phase === "idle" && !S.dragging && !activeContinent() && CONFIG.idleSpeed && now - S.lastDrag > 1500) {
     S.rot[0] += CONFIG.idleSpeed * dt / 1000; S.speed = CONFIG.idleSpeed * 16.7 / 1000;
   } else if (!S.dragging) S.speed = 0;
   Globe.render(now);
@@ -1723,7 +1960,7 @@ function frame(elapsed) {
 function setupDrag() {
   const cv = Globe.canvas; let px = 0, py = 0;
   cv.addEventListener("pointerdown", e => {
-    if (S.phase !== "idle") return;
+    if (S.phase !== "idle" || activeContinent() || S.viewAnim) return;   // kontinent: pogled je fiksan
     S.dragging = true; px = e.clientX; py = e.clientY; cv.setPointerCapture(e.pointerId); cv.classList.add("dragging");
   });
   cv.addEventListener("pointermove", e => {
@@ -1874,7 +2111,7 @@ function makeStars() {
    POKRETANJE
    ===================================================================== */
 async function init() {
-  makeStars(); applySettings(); updateCounter(); buildManualList(); bindUI(); bindViewers(); updateViewerBadge(); layout();
+  makeStars(); applySettings(); updateCounter(); buildManualList(); bindUI(); bindViewers(); bindContinent(); updateBadges(); layout();
   if (!window.d3 || !window.topojson) {
     $("loading").innerHTML = "😕 Ne mogu učitati biblioteke (D3/TopoJSON).<br>Provjeri internetsku vezu i osvježi stranicu.";
     return;
@@ -1890,6 +2127,7 @@ async function init() {
     return;
   }
   $("loading").hidden = true;
+  applyContinentInstant();
   S.phase = "idle"; setSpinLabel(); Globe.invalidate();
   d3.timer(frame);
   // Kontrola podataka: upozori u konzoli ako neki unos nema sva polja.

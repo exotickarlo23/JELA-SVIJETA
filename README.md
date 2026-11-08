@@ -26,6 +26,10 @@ Otvori `index.html` u pregledniku (dvoklik). Backend nije potreban. Potreban je 
   kratice poput SAD/BiH/UK te padeže poput „u Japanu”) i broji glasove. Globus tada bira samo između predloženih država,
   a ostale izblijede. Tijekom vrtnje pojavljuje se natpis „Pogodi državu u komentarima!”, a na kartici piše koliko je glasova
   država dobila. Opcija „Više glasova = veća šansa” daje državama s više glasova veću šansu.
+- **🗺️ Kontinent**: izvlačenje samo s jednog kontinenta (Europa, Azija, Afrika, Sjeverna i Srednja Amerika, Južna Amerika,
+  Oceanija). Globus se glatko okrene i uveća na kontinent, a ostale države izblijede. Umjesto vrtnje svjetlo skakuće po državama
+  i postupno usporava, kao lampice na ruletu, dok ne stane na izvučenoj državi. Kombinira se s načinom „Gledatelji biraju”.
+  Rusija i Turska su i u Europi i u Aziji.
 - **Način za snimanje**: 📱 prebacuje na format 9:16, a 🎬 uključuje čisti prikaz u kojem je vidljiv samo gumb ZAVRTI!.
   Iz čistog prikaza izlaziš tipkom H ili Esc, ili dvostrukim dodirom pozadine.
 - Tipkovnica: razmak/Enter = zavrti, H = čisti prikaz, D = označi odrađeno.
@@ -38,6 +42,7 @@ Sve je u `index.html`:
 | --- | --- |
 | Boje sučelja (pozadina, gumbi, obrubi) | CSS varijable u `:root` na vrhu |
 | Trajanje vrtnje, broj okretaja, krivulja usporavanja, boje globusa, debljina obruba | objekt `CONFIG` |
+| Središte i uvećanje pogleda za svaki kontinent, brzina „svjetla” | `CONFIG.continents`, `CONFIG.hop…` |
 | Podaci o državama i jelima | niz `COUNTRIES` (jedna država = jedan red) |
 | Glavni grad, kontinent, broj stanovnika | objekt `FACTS` |
 | Zamjenska imena država za prepoznavanje u komentarima | niz `ALIASES` |
