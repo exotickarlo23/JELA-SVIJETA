@@ -18,11 +18,22 @@ Otvori `index.html` u pregledniku (dvoklik). Backend nije potreban. Potreban je 
 - Male države imaju točkicu na globusu, a nakon zaustavljanja dobiju i veliki pin s pulsirajućim krugom.
   Tuvalu, kojeg nema na karti 50m, prikazan je pinom na svojim koordinatama.
 - Zvukovi se generiraju Web Audio API-jem: čegrtaljka koja usporava zajedno s globusom, „pop” i „ta-da!”.
-- **Odrađene države** spremaju se u `localStorage`. Na globusu su sive i više se ne mogu izvući.
+- **Odrađene države**, ocjene i red država spremaju se u `localStorage`. Na globusu su sive i više se ne mogu izvući.
   Tu su i brojač, reset liste i ručni unos (📝).
 - **Način za snimanje**: 📱 prebacuje na format 9:16, a 🎬 uključuje čisti prikaz u kojem je vidljiv samo gumb ZAVRTI!.
   Iz čistog prikaza izlaziš tipkom H ili Esc, ili dvostrukim dodirom pozadine.
-- Tipkovnica: razmak/Enter = zavrti, H = čisti prikaz, D = označi odrađeno.
+- **🎯 Odredi državu**: red država na kojima globus mora stati, npr. prijedlozi gledatelja (uz neobavezno ime, npr. `@marko`).
+  Sljedeća vrtnja staje na prvu državu iz reda i izgleda isto kao nasumična. Ime gledatelja prikazuje se na kartici.
+  Broj država u redu vidi se na gumbu (u čistom prikazu je skriven). Kad je red prazan, globus bira nasumično.
+- **⭐ Ocjena**: nakon kuhanja ocijeniš jelo od 1 do 10, može i s dvije decimale (npr. 8,75). Ocijenjeno jelo se automatski označi kao odrađeno.
+- **🛂 Putovnica**: svaka odrađena država dobije pečat sa zastavom, datumom i ocjenom (klik na pečat = promjena ocjene).
+  Kartica **Top lista** prikazuje top 10 („Top 10 nakon N država”), a **▶️ Odbrojavanje** otkriva mjesta od 10. do 1.
+  sa zvukom i konfetima, kao završni kadar ili zaseban video. Radi i u formatu 9:16 i u čistom prikazu.
+- **📸 Spremi sliku**: kartica jela kao PNG, **story 1080×1920** ili **naslovna 1280×720**, s oznakom epizode
+  (broj se sam predloži, a možeš ga promijeniti) i ocjenom. Na mobitelu se može i izravno podijeliti.
+- Tipkovnica: razmak/Enter = zavrti, H = čisti prikaz, D = označi odrađeno, R = ocijeni, T = odredi državu,
+  P = putovnica (u putovnici: 1/2 = pečati/top lista, razmak = odbrojavanje, Esc = zatvori).
+- Reset liste briše i ocjene.
 
 ## Kako mijenjati
 

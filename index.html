@@ -286,6 +286,106 @@ body.clean .exit-clean{display:block}
 .country-list .mini-emoji{width:34px;text-align:center;font-size:20px;flex:0 0 auto}
 .country-list .dish-hint{margin-left:auto;font-size:14px;opacity:.6;text-align:right}
 .country-list li.done label{background:#EFFFF5}
+
+/* =====================================================================
+   8) NOVO: red gledatelja (🎯), ocjene (⭐), putovnica (🛂), slika (📸)
+   ===================================================================== */
+.tool{position:relative}
+.tool .badge{position:absolute;top:-9px;right:-9px;min-width:22px;height:22px;padding:0 6px;border-radius:99px;
+  background:var(--spin);color:#fff;border:2px solid var(--ink);font-size:13px;font-weight:700;line-height:18px;display:none!important}
+.tool .badge.on{display:inline-block!important}
+.dish-meta{display:flex;gap:calc(var(--fu)*1.5);justify-content:center;flex-wrap:wrap;margin-top:calc(var(--fu)*2)}
+.pill{display:inline-flex;align-items:center;gap:.35em;border:3px solid var(--ink);border-radius:99px;background:#fff;
+  font-weight:600;font-size:calc(var(--fu)*3.6);padding:calc(var(--fu)*.6) calc(var(--fu)*2.6);box-shadow:0 3px 0 var(--ink)}
+.pill.score{background:var(--yellow)}
+.pill.by{background:#E9DEFF}
+.portrait .dish-actions .btn .lbl{display:none}
+.btn-yellow{--c:#FFC93C;--d:#C9930F}
+.btn-purple{--c:#9B7BFF;--d:#6A49D6}
+
+/* Ocjena */
+.rate-big{display:flex;align-items:baseline;justify-content:center;gap:10px;margin:14px 0 6px}
+.rate-big input{width:4.2em;text-align:center;font:inherit;font-weight:700;font-size:52px;border:4px solid var(--ink);border-radius:20px;
+  padding:2px 6px;background:var(--yellow);box-shadow:0 5px 0 var(--ink);outline:none}
+.rate-big input.bad{background:#FFB3C2}
+.rate-big span{font-size:30px;font-weight:700;opacity:.7}
+.rate-range{width:100%;accent-color:var(--spin);height:28px;margin-top:10px}
+.rate-quick{display:grid;grid-template-columns:repeat(10,1fr);gap:5px;margin-top:8px}
+.rate-quick button{border:3px solid var(--ink);border-radius:10px;font-weight:700;font-size:16px;padding:6px 0;background:#fff}
+.rate-quick button:hover{background:#FFF6D6}
+.rate-hint{font-size:14px!important;opacity:.7;text-align:center;margin-top:8px}
+
+/* Red gledatelja */
+.queue{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0;min-height:38px;align-items:center}
+.queue .empty{opacity:.6;font-size:15px}
+.qchip{display:inline-flex;align-items:center;gap:6px;border:3px solid var(--ink);border-radius:99px;background:var(--yellow);
+  font-weight:600;font-size:15px;padding:3px 4px 3px 12px}
+.qchip:first-child{background:var(--spin);color:#fff}
+.qchip button{width:24px;height:24px;border-radius:50%;background:#fff;color:var(--ink);border:2px solid var(--ink);font-weight:700;font-size:13px;line-height:1}
+.row2{display:flex;gap:8px}
+.row2 .search{margin:4px 0}
+#modalTarget .modal-box{height:min(86vh,760px)}
+#targetList li label{cursor:pointer}
+#targetList li.queued label{background:#FFF6D6}
+
+/* Slika za objavu */
+.shot-opts{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:8px 0}
+.shot-opts label{font-weight:600;font-size:16px;display:flex;align-items:center;gap:6px}
+.shot-opts input[type=number]{width:90px;font:inherit;font-size:17px;padding:4px 10px;border:3px solid var(--ink);border-radius:12px}
+.shot-preview{flex:1 1 auto;min-height:0;display:flex;align-items:center;justify-content:center;background:repeating-conic-gradient(#F3EEFF 0 25%,#fff 0 50%) 0 0/20px 20px;
+  border:3px solid var(--ink);border-radius:16px;padding:10px;overflow:hidden}
+.shot-preview canvas{max-width:100%;max-height:48vh;border-radius:8px;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+#modalShot .modal-box{width:min(640px,100%)}
+
+/* Putovnica */
+.passport{position:absolute;inset:0;z-index:50;display:flex;flex-direction:column;gap:calc(var(--u)*2);
+  padding:calc(var(--u)*3);padding-top:max(calc(var(--u)*3),env(safe-area-inset-top));
+  background:#1F3A6B radial-gradient(rgba(255,255,255,.07) 2px,transparent 2.5px) 0 0/22px 22px;color:#fff;animation:ppIn .45s cubic-bezier(.2,1.3,.4,1)}
+@keyframes ppIn{from{transform:translateY(8%) scale(.96);opacity:0}}
+.pp-head{display:flex;align-items:center;gap:calc(var(--u)*2);flex-wrap:wrap}
+.pp-brand{flex:1 1 auto;min-width:0}
+.pp-title{font-weight:700;font-size:calc(var(--u)*8);line-height:1;color:#FFE14D;-webkit-text-stroke:calc(var(--u)*.45) var(--ink);paint-order:stroke fill;text-shadow:0 calc(var(--u)*.8) 0 var(--ink)}
+.pp-sub{font-weight:600;font-size:calc(var(--u)*3.6);margin-top:calc(var(--u)*1);opacity:.95}
+.pp-head .tool{color:var(--ink)}
+.pp-tabs{display:flex;gap:8px}
+.pp-tabs .chip{color:var(--ink);font-size:calc(var(--u)*3.4)}
+.pp-body{flex:1 1 auto;min-height:0;overflow:auto;background:#FFF8E6;color:var(--ink);border:4px solid var(--ink);border-radius:calc(var(--u)*5);
+  box-shadow:0 calc(var(--u)*1.6) 0 var(--ink);padding:calc(var(--u)*3);
+  background-image:repeating-linear-gradient(0deg,transparent 0 calc(var(--u)*9 - 1px),rgba(31,58,107,.08) calc(var(--u)*9 - 1px) calc(var(--u)*9))}
+.pp-empty{text-align:center;font-weight:600;font-size:calc(var(--u)*4.4);padding:calc(var(--u)*10) calc(var(--u)*4);opacity:.75}
+.stamps{display:grid;grid-template-columns:repeat(auto-fill,minmax(calc(var(--u)*30),1fr));gap:calc(var(--u)*3)}
+.stamp{--c:#C2335E;position:relative;aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:calc(var(--u)*.8);
+  border:calc(var(--u)*.9) dashed var(--c);border-radius:50%;color:var(--c);text-align:center;padding:calc(var(--u)*2);
+  box-shadow:inset 0 0 0 calc(var(--u)*.7) #FFF8E6,inset 0 0 0 calc(var(--u)*1.2) var(--c);background:rgba(255,255,255,.55);
+  transform:rotate(var(--r,0deg));cursor:pointer;animation:stampIn .5s cubic-bezier(.3,1.6,.5,1) both;animation-delay:var(--d,0s)}
+.stamp.sq{border-radius:calc(var(--u)*4)}
+.stamp.oct{border-radius:28%}
+.stamp:hover{background:#fff}
+@keyframes stampIn{0%{transform:rotate(var(--r,0deg)) scale(2.2);opacity:0}60%{transform:rotate(var(--r,0deg)) scale(.92);opacity:1}100%{transform:rotate(var(--r,0deg)) scale(1)}}
+.stamp img,.stamp .emoji-flag{height:calc(var(--u)*7);width:auto;max-width:calc(var(--u)*13);border:2px solid var(--ink);border-radius:4px;filter:saturate(.85)}
+.stamp .emoji-flag{border:0;font-size:calc(var(--u)*6.5);line-height:1}
+.stamp .s-name{font-weight:700;font-size:calc(var(--u)*3.3);line-height:1.05;text-transform:uppercase;letter-spacing:.5px;max-width:100%;overflow-wrap:anywhere}
+.stamp .s-date{font-size:calc(var(--u)*2.6);font-weight:600;opacity:.85}
+.stamp .s-score{font-weight:700;font-size:calc(var(--u)*3.4);background:var(--c);color:#fff;border-radius:99px;padding:0 calc(var(--u)*1.6)}
+.stamp .s-score.none{background:transparent;color:var(--c);opacity:.7;font-size:calc(var(--u)*2.6)}
+.top-title{font-weight:700;font-size:calc(var(--u)*6);text-align:center;margin-bottom:calc(var(--u)*2.5)}
+.top{list-style:none;display:flex;flex-direction:column;gap:calc(var(--u)*1.6)}
+.top li{display:flex;align-items:center;gap:calc(var(--u)*2.2);background:#fff;border:3px solid var(--ink);border-radius:calc(var(--u)*3.5);
+  padding:calc(var(--u)*1.4) calc(var(--u)*2.4);box-shadow:0 4px 0 var(--ink);transition:transform .5s cubic-bezier(.3,1.6,.5,1),opacity .35s}
+.top li.pending{opacity:0;transform:translateX(-30%) scale(.8)}
+.top li.reveal{animation:rowPop .6s cubic-bezier(.3,1.6,.5,1)}
+@keyframes rowPop{0%{transform:scale(.7)}60%{transform:scale(1.06)}100%{transform:scale(1)}}
+.top li:nth-child(1){background:#FFE97A}.top li:nth-child(2){background:#EEF1F6}.top li:nth-child(3){background:#FFD9B0}
+.top .rank{flex:0 0 auto;width:calc(var(--u)*10);height:calc(var(--u)*10);border-radius:50%;border:3px solid var(--ink);background:var(--spin);color:#fff;
+  display:flex;align-items:center;justify-content:center;font-weight:700;font-size:calc(var(--u)*4.6);-webkit-text-stroke:1px var(--ink)}
+.top .t-flag img,.top .t-flag .emoji-flag{height:calc(var(--u)*7);width:auto;max-width:calc(var(--u)*11);border:2px solid var(--ink);border-radius:4px}
+.top .t-flag .emoji-flag{border:0;font-size:calc(var(--u)*6)}
+.top .t-main{flex:1 1 auto;min-width:0}
+.top .t-country{font-weight:700;font-size:calc(var(--u)*4.4);line-height:1.1}
+.top .t-dish{font-size:calc(var(--u)*3.3);opacity:.75;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.top .t-score{flex:0 0 auto;font-weight:700;font-size:calc(var(--u)*5.6)}
+.top .t-score small{font-size:.5em;opacity:.6}
+
 @media (prefers-reduced-motion:reduce){.cloud,.star,.btn-spin,.ph-icon,.dish-emoji span{animation:none!important}}
 </style>
 </head>
@@ -304,6 +404,8 @@ body.clean .exit-clean{display:block}
       <div class="progress"><div id="progressBar"></div></div>
     </div>
     <nav class="toolbar hide-in-clean" aria-label="Alati">
+      <button class="tool" id="btnTarget" title="Odredi na kojoj državi će globus stati (npr. prijedlog gledatelja) – tipka T">🎯 <span>Odredi državu</span><b class="badge" id="queueBadge"></b></button>
+      <button class="tool" id="btnPassport" title="Putovnica: pečati odrađenih država i top lista (tipka P)">🛂 <span>Putovnica</span></button>
       <button class="tool" id="btnManual" title="Ručno označi države koje si već napravio">📝 <span>Ručni unos</span></button>
       <button class="tool" id="btnResetList" title="Obriši popis odrađenih država">🗑️ <span>Reset liste</span></button>
       <button class="tool" id="btnVertical" aria-pressed="false" title="Vertikalni format 9:16 za snimanje">📱 <span>9:16</span></button>
@@ -380,9 +482,15 @@ body.clean .exit-clean{display:block}
       <h2 class="dish-name" id="cardDish"></h2>
       <div class="dish-orig" id="cardOrig"></div>
       <p class="dish-desc" id="cardDesc"></p>
+      <div class="dish-meta" id="cardMeta">
+        <span class="pill score" id="cardScore" hidden></span>
+        <span class="pill by" id="cardBy" hidden></span>
+      </div>
       <div class="dish-actions hide-in-clean">
         <button class="btn btn-green" id="btnDone">✅ Označi kao odrađeno</button>
-        <a class="btn" id="btnRecipe" target="_blank" rel="noopener">🔍 Recept</a>
+        <button class="btn btn-yellow" id="btnRate" title="Ocijeni jelo od 1 do 10">⭐ <span class="lbl">Ocijeni</span></button>
+        <button class="btn btn-purple" id="btnShot" title="Spremi karticu kao sliku (story ili naslovna)">📸 <span class="lbl">Slika</span></button>
+        <a class="btn" id="btnRecipe" target="_blank" rel="noopener" title="Potraži recept">🔍 <span class="lbl">Recept</span></a>
       </div>
     </article>
   </section>
@@ -391,6 +499,29 @@ body.clean .exit-clean{display:block}
   <footer class="controls">
     <button class="btn btn-spin" id="btnSpin" disabled>ZAVRTI!</button>
   </footer>
+
+  <!-- ===== PUTOVNICA ===== -->
+  <section class="passport" id="passport" hidden aria-label="Putovnica">
+    <div class="pp-head">
+      <div class="pp-brand">
+        <div class="pp-title">🛂 Moja putovnica</div>
+        <div class="pp-sub" id="ppSub"></div>
+      </div>
+      <div class="pp-tabs hide-in-clean" id="ppTabs">
+        <button class="chip active" data-tab="stamps">🌍 Pečati</button>
+        <button class="chip" data-tab="top">🏆 Top lista</button>
+      </div>
+      <button class="tool hide-in-clean" id="ppCountdown" title="Otkrivaj top listu od 10. do 1. mjesta (razmak)">▶️ <span>Odbrojavanje</span></button>
+      <button class="tool hide-in-clean" id="ppClose" title="Zatvori (Esc)">✕</button>
+    </div>
+    <div class="pp-body" id="ppBody">
+      <div class="stamps" id="ppStamps"></div>
+      <div id="ppTopWrap" hidden>
+        <div class="top-title" id="ppTopTitle"></div>
+        <ol class="top" id="ppTop"></ol>
+      </div>
+    </div>
+  </section>
 
   <canvas id="confetti" aria-hidden="true"></canvas>
   <button class="exit-clean" id="exitClean" title="Izađi iz čistog prikaza (H)">✕</button>
@@ -422,6 +553,60 @@ body.clean .exit-clean{display:block}
     <div class="modal-actions">
       <button class="btn" id="confirmNo">Odustani</button>
       <button class="btn btn-spin" style="font-size:18px;padding:10px 22px;letter-spacing:0;-webkit-text-stroke:0;text-shadow:none" id="confirmYes">Da, obriši</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: odredi državu (red gledatelja) ===== -->
+<div class="modal" id="modalTarget" hidden>
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="targetTitle">
+    <h3 id="targetTitle">🎯 Odredi državu</h3>
+    <p>Globus staje na prvu državu iz reda. Vrtnja izgleda isto kao nasumična, a država izlazi iz reda kad se zavrti.</p>
+    <div class="queue" id="targetQueue"></div>
+    <div class="row2">
+      <input class="search" id="targetWho" type="text" maxlength="40" placeholder="Gledatelj (neobavezno), npr. @marko" autocomplete="off">
+    </div>
+    <input class="search" id="targetSearch" type="search" placeholder="Traži državu ili jelo… (klik = dodaj u red)" autocomplete="off">
+    <ul class="country-list" id="targetList"></ul>
+    <div class="modal-actions">
+      <button class="btn" id="targetClear">🧹 Isprazni red</button>
+      <button class="btn btn-green" id="targetClose">Gotovo 👍</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: ocjena ===== -->
+<div class="modal" id="modalRate" hidden>
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="rateTitle" style="width:min(480px,100%)">
+    <h3 id="rateTitle">⭐ Ocijeni jelo</h3>
+    <p id="rateWhat"></p>
+    <div class="rate-big"><input id="rateInput" type="text" inputmode="decimal" autocomplete="off" aria-label="Ocjena od 1 do 10"><span>/ 10</span></div>
+    <input class="rate-range" id="rateRange" type="range" min="1" max="10" step="0.05" aria-label="Klizač ocjene">
+    <div class="rate-quick" id="rateQuick"></div>
+    <p class="rate-hint">Od 1 do 10, može i s dvije decimale (npr. 8,75)</p>
+    <div class="modal-actions">
+      <button class="btn" id="rateRemove">Ukloni ocjenu</button>
+      <button class="btn btn-green" id="rateSave">Spremi ⭐</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: spremi sliku ===== -->
+<div class="modal" id="modalShot" hidden>
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="shotTitle">
+    <h3 id="shotTitle">📸 Spremi sliku</h3>
+    <div class="chips" id="shotFormats">
+      <button class="chip active" data-f="story">📱 Story 1080×1920</button>
+      <button class="chip" data-f="thumb">🖼️ Naslovna 1280×720</button>
+    </div>
+    <div class="shot-opts">
+      <label>Epizoda # <input id="shotEp" type="number" min="1" max="9999"></label>
+      <label><input id="shotScore" type="checkbox" checked> prikaži ocjenu</label>
+    </div>
+    <div class="shot-preview"><canvas id="shotCanvas"></canvas></div>
+    <div class="modal-actions">
+      <button class="btn" id="shotShare" hidden>📤 Podijeli</button>
+      <button class="btn btn-green" id="shotSave">💾 Spremi PNG</button>
     </div>
   </div>
 </div>
@@ -708,6 +893,7 @@ function randomIndex(n) {
 
 /** localStorage omotači (rade i kad je spremanje blokirano, npr. privatni prozor). */
 const STORE_DONE = "zavrtiGlobus.odradjeno", STORE_SETTINGS = "zavrtiGlobus.postavke";
+const STORE_META = "zavrtiGlobus.detalji", STORE_QUEUE = "zavrtiGlobus.red";
 function loadJSON(key, fallback) { try { const v = JSON.parse(localStorage.getItem(key)); return v ?? fallback; } catch (e) { return fallback; } }
 function saveJSON(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) { /* nije kritično */ } }
 
@@ -717,6 +903,17 @@ function saveJSON(key, value) { try { localStorage.setItem(key, JSON.stringify(v
 const done = new Set(loadJSON(STORE_DONE, []).filter(id => BY_ID.has(id)));
 const settings = Object.assign({ sound: true, face: true, vertical: false }, loadJSON(STORE_SETTINGS, {}));
 const saveDone = () => saveJSON(STORE_DONE, [...done]);
+/** Detalji po državi: { id: { at: vrijeme kad je odrađeno (ms), score: ocjena 1–10 } } */
+const meta = (() => { const m = loadJSON(STORE_META, {}); return m && typeof m === "object" ? m : {}; })();
+const saveMeta = () => saveJSON(STORE_META, meta);
+/** Red država na kojima globus mora stati: [{ id, by: "ime gledatelja" }] */
+const queue = (Array.isArray(loadJSON(STORE_QUEUE, [])) ? loadJSON(STORE_QUEUE, []) : []).filter(q => q && BY_ID.has(q.id));
+const saveQueue = () => saveJSON(STORE_QUEUE, queue);
+const scoreOf = id => (meta[id] && typeof meta[id].score === "number") ? meta[id].score : null;
+const fmtScore = v => v.toLocaleString("hr-HR", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+const fmtDate = ms => { const d = new Date(ms); return `${d.getDate()}. ${d.getMonth() + 1}. ${d.getFullYear()}.`; };
+// Državama označenima prije ove verzije dodijeli redoslijed (da putovnica i epizode imaju poredak).
+{ let t = 1; for (const id of done) if (!meta[id] || !meta[id].at) { meta[id] = Object.assign(meta[id] || {}, { at: t++ }); } saveMeta(); }
 const saveSettings = () => saveJSON(STORE_SETTINGS, settings);
 
 const S = {
@@ -725,6 +922,7 @@ const S = {
   speed: 0,              // °/frame – koristi se za odabir detaljnosti i "wobble"
   spin: null,            // podaci o trenutnoj vrtnji
   pick: null,            // odabrana država (objekt iz COUNTRIES)
+  pickBy: "",            // ime gledatelja ako je država došla iz reda 🎯
   landedAt: 0,           // trenutak zaustavljanja (ms)
   timers: [],            // setTimeout-i slijeda nakon zaustavljanja
   dragging: false, lastDrag: 0,
@@ -1274,8 +1472,25 @@ function updateDoneButton() {
   UI.doneBtn.classList.toggle("btn-green", !isDone);
 }
 function setDone(id, on) {
-  if (on) done.add(id); else done.delete(id);
-  saveDone(); updateCounter(); Globe.recolor(); updateDoneButton();
+  if (on) { done.add(id); meta[id] = Object.assign(meta[id] || {}, meta[id] && meta[id].at ? {} : { at: Date.now() }); }
+  else { done.delete(id); if (meta[id]) delete meta[id].at; }
+  saveDone(); saveMeta(); updateCounter(); Globe.recolor(); updateDoneButton(); updateCardMeta();
+  if (!$("passport").hidden) Passport.render();
+}
+/** Ocjena (null = ukloni). Ocijenjeno jelo se automatski označi kao odrađeno. */
+function setScore(id, v) {
+  if (v == null) { if (meta[id]) delete meta[id].score; saveMeta(); }
+  else { meta[id] = Object.assign(meta[id] || {}, { score: v }); saveMeta(); if (!done.has(id)) { setDone(id, true); return; } }
+  updateCardMeta();
+  if (!$("passport").hidden) Passport.render();
+}
+function updateCardMeta() {
+  if (!S.pick) return;
+  const v = scoreOf(S.pick.id), sc = $("cardScore"), by = $("cardBy");
+  sc.hidden = v == null; if (v != null) sc.textContent = `⭐ ${fmtScore(v)} / 10`;
+  by.hidden = !S.pickBy; if (S.pickBy) by.textContent = `💬 Prijedlog: ${S.pickBy}`;
+  $("cardMeta").hidden = sc.hidden && by.hidden;
+  $("btnRate").title = v == null ? "Ocijeni jelo od 1 do 10" : "Promijeni ocjenu";
 }
 function setSpinLabel() {
   UI.spinBtn.textContent = S.phase === "landed" ? "ZAVRTI PONOVO!" : "ZAVRTI!";
@@ -1291,9 +1506,19 @@ function availablePool() { return COUNTRIES.filter(c => !done.has(c.id) && Globe
 
 function startSpin() {
   if (S.phase !== "idle") return;
-  const pool = availablePool();
-  if (!pool.length) { toast("🎉 Sve države su odrađene! Resetiraj listu za novu rundu."); return; }
-  const country = pool[randomIndex(pool.length)];         // ravnomjerno po državama
+  // 🎯 Najprije red (prijedlozi gledatelja), inače nasumično
+  let country = null, by = "";
+  while (queue.length && !country) {
+    const q = queue.shift();
+    if (Globe.world.infoById.has(q.id)) { country = BY_ID.get(q.id); by = q.by || ""; }
+  }
+  saveQueue(); Target.update();
+  if (!country) {
+    const pool = availablePool();
+    if (!pool.length) { toast("🎉 Sve države su odrađene! Resetiraj listu za novu rundu."); return; }
+    country = pool[randomIndex(pool.length)];             // ravnomjerno po državama
+  }
+  S.pickBy = by;
   const info = Globe.world.infoById.get(country.id);
   const [lon, lat] = info.center;
   const turns = CONFIG.minTurns + randomIndex(CONFIG.maxTurns - CONFIG.minTurns + 1);
@@ -1359,7 +1584,7 @@ function showCard() {
   $("cardOrig").hidden = c.izvorno.trim().toLowerCase() === c.jelo.trim().toLowerCase();   // ne ponavljaj isto ime
   $("cardDesc").textContent = c.opis;
   $("btnRecipe").href = "https://www.google.com/search?q=" + encodeURIComponent(c.izvorno.split("·")[0].trim() + " " + c.jelo + " recept");
-  updateDoneButton();
+  updateDoneButton(); updateCardMeta();
   UI.placeholder.hidden = true;
   UI.card.hidden = false;
   UI.card.classList.remove("leave", "enter"); void UI.card.offsetWidth; UI.card.classList.add("enter");
@@ -1382,7 +1607,7 @@ function respin() {
   S.timers.forEach(clearTimeout); S.timers = [];
   UI.balloon.classList.remove("show"); UI.balloon.classList.add("hide");
   if (!UI.card.hidden) { UI.card.classList.remove("enter"); UI.card.classList.add("leave"); }
-  S.phase = "idle"; S.pick = null; Globe.invalidate(); setMood("idle"); setSpinLabel();
+  S.phase = "idle"; S.pick = null; S.pickBy = ""; Globe.invalidate(); setMood("idle"); setSpinLabel();
   setTimeout(() => {
     UI.card.hidden = true; UI.card.classList.remove("leave");
     UI.placeholder.hidden = false;
@@ -1506,6 +1731,11 @@ function setClean(on) {
 function bindUI() {
   UI.spinBtn.addEventListener("click", mainAction);
   UI.doneBtn.addEventListener("click", () => { if (S.pick) { setDone(S.pick.id, !done.has(S.pick.id)); popButton(UI.doneBtn); } });
+  $("btnRate").addEventListener("click", () => { if (S.pick) Rate.open(S.pick); });
+  $("btnShot").addEventListener("click", () => { if (S.pick) Shot.open(S.pick); });
+  $("btnTarget").addEventListener("click", () => Target.open());
+  $("btnPassport").addEventListener("click", () => Passport.open());
+  Target.bind(); Rate.bind(); Shot.bind(); Passport.bind();
   $("btnManual").addEventListener("click", () => { refreshManual(); openModal("modalManual"); setTimeout(() => $("manualSearch").focus(), 50); });
   $("manualClose").addEventListener("click", () => closeModal("modalManual"));
   $("manualSearch").addEventListener("input", refreshManual);
@@ -1517,8 +1747,10 @@ function bindUI() {
   });
   $("btnResetList").addEventListener("click", () => {
     if (!done.size) { toast("Popis je već prazan 🙂"); return; }
-    askConfirm("Obrisati popis?", `Sigurno želiš obrisati svih ${done.size} odrađenih država? Ovo se ne može poništiti.`, "Da, obriši", () => {
-      done.clear(); saveDone(); updateCounter(); Globe.recolor(); updateDoneButton(); toast("🗑️ Popis je obrisan – kreće nova runda!");
+    askConfirm("Obrisati popis?", `Sigurno želiš obrisati svih ${done.size} odrađenih država i njihove ocjene? Ovo se ne može poništiti.`, "Da, obriši", () => {
+      done.clear(); for (const k of Object.keys(meta)) delete meta[k];
+      saveDone(); saveMeta(); updateCounter(); Globe.recolor(); updateDoneButton(); updateCardMeta();
+      toast("🗑️ Popis i ocjene su obrisani – kreće nova runda!");
     });
   });
   $("btnVertical").addEventListener("click", () => { settings.vertical = !settings.vertical; saveSettings(); applySettings(); layout(); });
@@ -1532,12 +1764,25 @@ function bindUI() {
   });
   document.addEventListener("keydown", e => {
     const modalOpen = [...document.querySelectorAll(".modal")].some(m => !m.hidden);
+    const ppOpen = !$("passport").hidden;
     if (e.key === "Escape") {
       if (modalOpen) document.querySelectorAll(".modal").forEach(m => m.hidden = true);
+      else if (ppOpen) Passport.close();
       else if (document.body.classList.contains("clean")) setClean(false);
       return;
     }
     if (modalOpen || /INPUT|TEXTAREA/.test(document.activeElement.tagName)) return;
+    if (ppOpen) {
+      if (e.key === " " || e.key === "Enter") { e.preventDefault(); Passport.countdown(); }
+      else if (e.key === "1") Passport.tab("stamps");
+      else if (e.key === "2") Passport.tab("top");
+      else if (e.key === "p" || e.key === "P") Passport.close();
+      else if (e.key === "h" || e.key === "H") setClean(!document.body.classList.contains("clean"));
+      return;
+    }
+    if (e.key === "t" || e.key === "T") { e.preventDefault(); Target.open(); return; }
+    if (e.key === "p" || e.key === "P") { Passport.open(); return; }
+    if ((e.key === "r" || e.key === "R") && S.pick && S.phase === "landed") { e.preventDefault(); Rate.open(S.pick); return; }
     if (e.key === " " || e.key === "Enter") {
       if (document.activeElement && /^(BUTTON|A)$/.test(document.activeElement.tagName)) return;   // gumb sam reagira
       e.preventDefault(); mainAction();
@@ -1546,6 +1791,457 @@ function bindUI() {
   });
   new ResizeObserver(() => layout()).observe(UI.app);
 }
+
+/* =====================================================================
+   🎯 ODREDI DRŽAVU – red država (npr. prijedlozi gledatelja)
+   Sljedeća vrtnja staje na prvu državu iz reda; izgleda isto kao nasumična.
+   ===================================================================== */
+/** Mala zastava (slika ili emoji ako se slika ne učita). */
+function flagEl(c) {
+  const box = document.createElement("span");
+  const img = new Image(); img.alt = ""; img.loading = "lazy"; img.src = CONFIG.flagSvg(c.iso2);
+  img.onerror = () => { box.innerHTML = `<span class="emoji-flag">${flagEmoji(c.iso2)}</span>`; };
+  box.appendChild(img);
+  return box;
+}
+/** 1 država, 2–4 države, 5+ država (11–14 država). */
+const drzava = n => (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14)) ? "države" : "država";
+
+const Target = (() => {
+  const list = $("targetList");
+  let built = false;
+  function build() {
+    built = true; list.innerHTML = "";
+    [...COUNTRIES].sort((a, b) => a.ime.localeCompare(b.ime, "hr")).forEach(c => {
+      const li = document.createElement("li"); li.dataset.id = c.id; li.dataset.q = norm(c.ime + " " + c.jelo + " " + c.izvorno);
+      li.innerHTML = `<label><img class="mini-flag" loading="lazy" alt="" src="${CONFIG.flagSvg(c.iso2)}"><span>${c.ime}</span><span class="dish-hint"></span></label>`;
+      li.querySelector("img").onerror = e => { e.target.outerHTML = `<span class="mini-emoji">${flagEmoji(c.iso2)}</span>`; };
+      li.addEventListener("click", () => add(c.id));
+      list.appendChild(li);
+    });
+  }
+  function add(id) {
+    const by = $("targetWho").value.trim().slice(0, 40);
+    queue.push({ id, by }); saveQueue(); update();
+    const c = BY_ID.get(id);
+    toast(`🎯 ${c.ime} je ${queue.length}. u redu${by ? " · " + by : ""}`, 1800);
+    $("targetWho").value = "";
+  }
+  function remove(i) { queue.splice(i, 1); saveQueue(); update(); }
+  function renderQueue() {
+    const box = $("targetQueue"); box.innerHTML = "";
+    if (!queue.length) { box.innerHTML = `<span class="empty">Red je prazan – globus bira nasumično 🎲</span>`; return; }
+    queue.forEach((q, i) => {
+      const c = BY_ID.get(q.id), chip = document.createElement("span");
+      chip.className = "qchip";
+      chip.title = i === 0 ? "Sljedeća vrtnja staje ovdje" : "";
+      chip.append(`${i + 1}. ${flagEmoji(c.iso2)} ${c.ime}${q.by ? " · " + q.by : ""}`);   // tekst, ne HTML
+      const x = document.createElement("button"); x.textContent = "✕"; x.title = "Makni iz reda";
+      x.addEventListener("click", () => remove(i));
+      chip.appendChild(x); box.appendChild(chip);
+    });
+  }
+  function refreshList() {
+    const q = norm($("targetSearch").value.trim());
+    for (const li of list.children) {
+      const id = li.dataset.id, pos = queue.findIndex(x => x.id === id);
+      li.hidden = !!q && !li.dataset.q.includes(q);
+      li.classList.toggle("queued", pos >= 0);
+      li.classList.toggle("done", done.has(id));
+      const c = BY_ID.get(id);
+      li.querySelector(".dish-hint").textContent = (pos >= 0 ? `🎯 ${pos + 1}. u redu · ` : "") + (done.has(id) ? "✔️ odrađeno · " : "") + `${c.emoji} ${c.jelo}`;
+    }
+  }
+  function update() {
+    const b = $("queueBadge");
+    b.textContent = queue.length; b.classList.toggle("on", queue.length > 0);
+    if (!$("modalTarget").hidden) { renderQueue(); refreshList(); }
+  }
+  function open() {
+    if (!built) build();
+    renderQueue(); refreshList(); openModal("modalTarget");
+    setTimeout(() => $("targetSearch").focus(), 50);
+  }
+  function bind() {
+    $("targetSearch").addEventListener("input", refreshList);
+    $("targetSearch").addEventListener("keydown", e => {   // Enter = dodaj prvu pronađenu
+      if (e.key !== "Enter") return;
+      const li = [...list.children].find(x => !x.hidden);
+      if (li && $("targetSearch").value.trim()) { add(li.dataset.id); $("targetSearch").value = ""; refreshList(); }
+    });
+    $("targetClear").addEventListener("click", () => { queue.length = 0; saveQueue(); update(); });
+    $("targetClose").addEventListener("click", () => closeModal("modalTarget"));
+  }
+  return { open, update, bind };
+})();
+
+/* =====================================================================
+   ⭐ OCJENA 1–10 (do dvije decimale)
+   ===================================================================== */
+const Rate = (() => {
+  let country = null;
+  const inp = $("rateInput"), range = $("rateRange");
+  const parse = str => {
+    const t = String(str).trim().replace(",", ".");
+    if (!/^\d{1,2}(\.\d{0,2})?$/.test(t)) return null;
+    const v = Math.round(Number(t) * 100) / 100;
+    return v >= 1 && v <= 10 ? v : null;
+  };
+  function open(c) {
+    country = c;
+    const v = scoreOf(c.id);
+    $("rateWhat").textContent = `${c.emoji} ${c.jelo} – ${c.ime}`;
+    inp.value = v != null ? fmtScore(v) : ""; inp.classList.remove("bad");
+    range.value = v != null ? v : 7;
+    $("rateRemove").hidden = v == null;
+    openModal("modalRate");
+    setTimeout(() => { inp.focus(); inp.select(); }, 50);
+  }
+  function save() {
+    const v = parse(inp.value);
+    if (v == null) { inp.classList.add("bad"); toast("Upiši ocjenu od 1 do 10 (npr. 8,75)"); inp.focus(); return; }
+    setScore(country.id, v);
+    closeModal("modalRate");
+    toast(`⭐ ${country.ime}: ${fmtScore(v)} / 10`);
+    Sound.pop();
+  }
+  function bind() {
+    const quick = $("rateQuick");
+    for (let i = 1; i <= 10; i++) {
+      const b = document.createElement("button"); b.textContent = i;
+      b.addEventListener("click", () => { inp.value = i; range.value = i; inp.classList.remove("bad"); inp.focus(); });
+      quick.appendChild(b);
+    }
+    inp.addEventListener("input", () => { const v = parse(inp.value); inp.classList.toggle("bad", v == null && inp.value.trim() !== ""); if (v != null) range.value = v; });
+    inp.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); save(); } });
+    range.addEventListener("input", () => { inp.value = fmtScore(Math.round(range.value * 100) / 100); inp.classList.remove("bad"); });
+    $("rateSave").addEventListener("click", save);
+    $("rateRemove").addEventListener("click", () => { setScore(country.id, null); closeModal("modalRate"); toast("Ocjena je uklonjena"); });
+  }
+  return { open, bind };
+})();
+
+/* =====================================================================
+   🛂 PUTOVNICA – pečati odrađenih država + top lista s odbrojavanjem
+   ===================================================================== */
+const Passport = (() => {
+  const INKS = ["#C2335E", "#2275C2", "#22985B", "#7A4CC9", "#D9771A", "#1F3A6B", "#B0306A"];
+  let current = "stamps", cd = [];
+  const doneSorted = () => [...done].map(id => BY_ID.get(id)).filter(Boolean)
+    .sort((a, b) => ((meta[a.id] || {}).at || 0) - ((meta[b.id] || {}).at || 0));
+  function topList() {
+    return [...done].filter(id => scoreOf(id) != null).map(id => BY_ID.get(id))
+      .sort((a, b) => scoreOf(b.id) - scoreOf(a.id) || ((meta[a.id] || {}).at || 0) - ((meta[b.id] || {}).at || 0)).slice(0, 10);
+  }
+  function render() {
+    const list = doneSorted(), rated = list.filter(c => scoreOf(c.id) != null);
+    const avg = rated.length ? rated.reduce((s, c) => s + scoreOf(c.id), 0) / rated.length : null;
+    $("ppSub").textContent = `${done.size} / ${TOTAL} ${drzava(TOTAL)} · ${rated.length} ocijenjeno` + (avg != null ? ` · prosjek ⭐ ${fmtScore(Math.round(avg * 100) / 100)}` : "");
+    // Pečati
+    const box = $("ppStamps"); box.innerHTML = "";
+    if (!list.length) box.innerHTML = `<div class="pp-empty" style="grid-column:1/-1">Putovnica je još prazna ✈️<br>Odradi prvo jelo i dobit ćeš pečat!</div>`;
+    list.forEach((c, i) => {
+      const n = parseInt(c.id, 10), st = document.createElement("button");
+      st.className = "stamp " + ["", "sq", "oct"][n % 3];
+      st.style.setProperty("--c", INKS[n % INKS.length]);
+      st.style.setProperty("--r", ((n * 37) % 15 - 7) + "deg");
+      st.style.setProperty("--d", Math.min(i * 0.035, 1.4) + "s");
+      st.title = `${c.ime}: ${c.jelo} – klikni za ocjenu`;
+      const at = (meta[c.id] || {}).at, v = scoreOf(c.id);
+      st.appendChild(flagEl(c));
+      const nm = document.createElement("div"); nm.className = "s-name"; nm.textContent = c.ime; st.appendChild(nm);
+      const dt = document.createElement("div"); dt.className = "s-date"; dt.textContent = at > 1e11 ? fmtDate(at) : `#${i + 1}`; st.appendChild(dt);
+      const sc = document.createElement("div"); sc.className = "s-score" + (v == null ? " none" : "");
+      sc.textContent = v == null ? "bez ocjene" : `⭐ ${fmtScore(v)}`; st.appendChild(sc);
+      st.addEventListener("click", () => Rate.open(c));
+      box.appendChild(st);
+    });
+    // Top lista
+    const top = topList(), ol = $("ppTop"); ol.innerHTML = "";
+    $("ppTopTitle").textContent = top.length ? `🏆 Top ${top.length} nakon ${done.size} ${drzava(done.size)}` : "🏆 Top lista";
+    if (!top.length) ol.innerHTML = `<li class="pp-empty" style="border:0;box-shadow:none;background:none;justify-content:center">Još nema ocjena – ocijeni jela ⭐ (na kartici ili klikom na pečat)</li>`;
+    top.forEach((c, i) => {
+      const li = document.createElement("li");
+      li.innerHTML = `<span class="rank">${i + 1}</span><span class="t-flag"></span><span class="t-main"><div class="t-country"></div><div class="t-dish"></div></span><span class="t-score"></span>`;
+      li.querySelector(".t-flag").appendChild(flagEl(c));
+      li.querySelector(".t-country").textContent = c.ime;
+      li.querySelector(".t-dish").textContent = `${c.emoji} ${c.jelo}`;
+      li.querySelector(".t-score").innerHTML = `${fmtScore(scoreOf(c.id))}<small> /10</small>`;
+      ol.appendChild(li);
+    });
+    $("ppCountdown").disabled = top.length < 2;
+  }
+  function tab(t) {
+    current = t;
+    for (const ch of $("ppTabs").children) ch.classList.toggle("active", ch.dataset.tab === t);
+    $("ppStamps").hidden = t !== "stamps";
+    $("ppTopWrap").hidden = t !== "top";
+    $("ppCountdown").hidden = t !== "top";
+    $("ppBody").scrollTop = 0;
+  }
+  function stop() { cd.forEach(clearTimeout); cd = []; for (const li of $("ppTop").children) li.classList.remove("pending"); }
+  /** Otkrivanje od 10. prema 1. mjestu – za završni kadar / zaseban video. */
+  function countdown() {
+    stop(); render(); tab("top");
+    const rows = [...$("ppTop").children].filter(li => li.querySelector(".rank"));
+    if (rows.length < 2) return;
+    Sound.ensure();
+    rows.forEach(li => li.classList.add("pending"));
+    let t = 900;
+    for (let i = rows.length - 1; i >= 0; i--) {
+      const li = rows[i], first = i === 0;
+      if (first) t += 1300;                                     // napetost prije pobjednika
+      cd.push(setTimeout(() => {
+        li.classList.remove("pending"); li.classList.add("reveal");
+        li.scrollIntoView({ block: "nearest", behavior: "smooth" });
+        if (first) {
+          Sound.tada();
+          const r = li.getBoundingClientRect(), a = UI.app.getBoundingClientRect();
+          Confetti.burst(r.left - a.left + r.width / 2, r.top - a.top + r.height / 2);
+        } else Sound.pop();
+      }, t));
+      t += 1100;
+    }
+  }
+  function open() { stop(); render(); tab(current); $("passport").hidden = false; }
+  function close() { stop(); $("passport").hidden = true; }
+  function bind() {
+    $("ppClose").addEventListener("click", close);
+    $("ppCountdown").addEventListener("click", countdown);
+    $("ppTabs").addEventListener("click", e => { const b = e.target.closest(".chip"); if (b) { stop(); tab(b.dataset.tab); } });
+  }
+  return { open, close, render, tab, countdown, bind };
+})();
+
+/* =====================================================================
+   📸 SPREMI SLIKU – kartica jela kao PNG (story 1080×1920 ili naslovna 1280×720)
+   Crta se izravno na <canvas>, bez vanjskih biblioteka.
+   ===================================================================== */
+const Shot = (() => {
+  const cv = $("shotCanvas");
+  let country = null, format = "story", token = 0, blob = null;
+  const flags = new Map();
+  const FONT = '"Fredoka","Baloo 2","Arial Rounded MT Bold","Nunito",system-ui,sans-serif';
+  const EMOJI = '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
+  const font = (px, w = 600) => `${w} ${Math.round(px)}px ${FONT}`;
+
+  /** Zastava s CORS-om (da se slika smije spremiti); null ako ne uspije. */
+  function loadFlag(iso2) {
+    if (!flags.has(iso2)) flags.set(iso2, new Promise(res => {
+      const img = new Image(); img.crossOrigin = "anonymous";
+      img.onload = () => res(img); img.onerror = () => res(null);
+      img.src = CONFIG.flagPng(iso2) + "?cors";
+    }));
+    return flags.get(iso2);
+  }
+  function rr(c, x, y, w, h, r) {
+    c.beginPath(); c.moveTo(x + r, y);
+    c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r);
+    c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath();
+  }
+  /** Lik s "cartoon" sjenom ispod i debelim obrubom. */
+  function blob3d(c, path, fill, sh, lw) {
+    c.save(); c.translate(0, sh); path(); c.fillStyle = CONFIG.ink; c.fill(); c.restore();
+    path(); c.fillStyle = fill; c.fill(); c.lineWidth = lw; c.strokeStyle = CONFIG.ink; c.stroke();
+  }
+  function wrap(c, text, maxW) {
+    const words = text.split(/\s+/), lines = []; let line = "";
+    for (const w of words) {
+      const t = line ? line + " " + w : w;
+      if (c.measureText(t).width <= maxW || !line) line = t; else { lines.push(line); line = w; }
+    }
+    if (line) lines.push(line);
+    return lines;
+  }
+  /** Smanjuje font dok tekst ne stane u maxLines redaka; ako ni tada ne stane, skrati s "…". */
+  function fit(c, text, maxW, maxLines, px, minPx, weight) {
+    let lines;
+    for (; px >= minPx; px -= 2) { c.font = font(px, weight); lines = wrap(c, text, maxW); if (lines.length <= maxLines && lines.every(l => c.measureText(l).width <= maxW)) return { px, lines }; }
+    px = minPx; c.font = font(px, weight); lines = wrap(c, text, maxW);
+    if (lines.length > maxLines) { lines = lines.slice(0, maxLines); let l = lines[maxLines - 1]; while (l && c.measureText(l + "…").width > maxW) l = l.slice(0, -1); lines[maxLines - 1] = l.replace(/[\s,.;:–-]+$/, "") + "…"; }
+    return { px, lines };
+  }
+  function outlined(c, text, x, y, px, fill, sw, shadow = 0) {
+    c.font = font(px, 700); c.lineJoin = "round"; c.miterLimit = 2;
+    if (shadow) { c.fillStyle = CONFIG.ink; c.lineWidth = sw; c.strokeStyle = CONFIG.ink; c.strokeText(text, x, y + shadow); c.fillText(text, x, y + shadow); }
+    c.lineWidth = sw; c.strokeStyle = CONFIG.ink; c.strokeText(text, x, y);
+    c.fillStyle = fill; c.fillText(text, x, y);
+  }
+  function background(c, W, H) {
+    const g = c.createLinearGradient(W * 0.2, 0, W * 0.8, H);
+    g.addColorStop(0, "#FFE98F"); g.addColorStop(0.55, "#FFB65C"); g.addColorStop(1, "#FF8A65");
+    c.fillStyle = g; c.fillRect(0, 0, W, H);
+    c.fillStyle = "rgba(255,255,255,.5)";
+    const step = Math.round(W / 24);
+    for (let y = step / 2; y < H; y += step) for (let x = step / 2; x < W; x += step) { c.beginPath(); c.arc(x, y, step * 0.06, 0, Math.PI * 2); c.fill(); }
+    c.font = `${Math.round(W * 0.035)}px ${FONT}`; c.fillStyle = "rgba(255,255,255,.85)"; c.textAlign = "center"; c.textBaseline = "middle";
+    [[.08, .2], [.92, .14], [.06, .62], [.94, .55], [.9, .9], [.12, .93]].forEach(([x, y], i) => c.fillText(i % 2 ? "✦" : "★", W * x, H * y));
+  }
+  function pill(c, text, cx, y, px, fill, color = "#fff", stroke = true) {
+    c.font = font(px, 700);
+    const w = c.measureText(text).width + px * 1.6, h = px * 1.75, x = cx - w / 2;
+    blob3d(c, () => rr(c, x, y, w, h, h / 2), fill, px * 0.16, px * 0.13);
+    c.textAlign = "center"; c.textBaseline = "middle";
+    if (stroke) outlined(c, text, cx, y + h / 2 + px * 0.04, px, color, px * 0.16);
+    else { c.fillStyle = color; c.fillText(text, cx, y + h / 2 + px * 0.04); }
+    return h;
+  }
+  function flagSize(img, h) { const r = img ? img.naturalWidth / img.naturalHeight : 1.5; return clamp(r, 0.8, 2.1) * h; }
+  function drawFlag(c, img, iso2, x, y, h) {
+    if (img) {
+      const w = flagSize(img, h), lw = h * 0.05;
+      c.save(); c.translate(0, h * 0.05); rr(c, x, y, w, h, h * 0.12); c.fillStyle = CONFIG.ink; c.fill(); c.restore();
+      c.save(); rr(c, x, y, w, h, h * 0.12); c.clip();
+      const k = Math.max(w / img.naturalWidth, h / img.naturalHeight);
+      c.drawImage(img, x + (w - img.naturalWidth * k) / 2, y + (h - img.naturalHeight * k) / 2, img.naturalWidth * k, img.naturalHeight * k);
+      c.restore();
+      rr(c, x, y, w, h, h * 0.12); c.lineWidth = lw; c.strokeStyle = CONFIG.ink; c.stroke();
+      return w;
+    }
+    c.font = `${Math.round(h * 0.95)}px ${EMOJI}`; c.textAlign = "left"; c.textBaseline = "middle";
+    c.fillStyle = "#000"; c.fillText(flagEmoji(iso2), x, y + h / 2);
+    return c.measureText(flagEmoji(iso2)).width;
+  }
+  function emojiPlate(c, emoji, cx, cy, r) {
+    blob3d(c, () => { c.beginPath(); c.arc(cx, cy, r, 0, Math.PI * 2); }, "#fff", r * 0.06, r * 0.045);
+    c.beginPath(); c.arc(cx, cy, r * 0.79, 0, Math.PI * 2); c.lineWidth = r * 0.11; c.strokeStyle = "#FFE7A8"; c.stroke();
+    c.font = `${Math.round(r * 1.05)}px ${EMOJI}`; c.textAlign = "center"; c.textBaseline = "middle"; c.fillStyle = "#000";
+    c.fillText(emoji, cx, cy + r * 0.06);
+  }
+  const showOrig = c => c.izvorno.trim().toLowerCase() !== c.jelo.trim().toLowerCase();
+
+  function drawStory(c, W, H, k, img, ep, score) {
+    background(c, W, H);
+    c.textAlign = "center"; c.textBaseline = "alphabetic";
+    pill(c, `EPIZODA #${ep}`, W / 2, 120, 54, "#FF5C8A");
+    outlined(c, "Zavrti globus", W / 2, 330, 118, "#fff", 18, 12);
+    // Kartica
+    const cx = 70, cy = 440, cw = W - 140, ch = 1300, pad = 60, inner = cw - pad * 2;
+    blob3d(c, () => rr(c, cx, cy, cw, ch, 70), "#FFFDF5", 22, 8);
+    // Zastava + ime države
+    const fh = 120, fw = img ? flagSize(img, fh) : fh * 1.2;
+    const nameFit = fit(c, k.ime, inner - fw - 36, 2, 78, 44, 700);
+    c.font = font(nameFit.px, 700);
+    const nameW = Math.max(...nameFit.lines.map(l => c.measureText(l).width));
+    c.font = font(32, 600); const labW = c.measureText("NACIONALNO JELO").width;
+    const groupW = fw + 36 + Math.max(nameW, labW), gx = W / 2 - groupW / 2, rowY = cy + 70;
+    const textH = nameFit.lines.length * nameFit.px * 1.05 + 44, rowH = Math.max(fh, textH);
+    drawFlag(c, img, k.iso2, gx, rowY + (rowH - fh) / 2, fh);
+    c.textAlign = "left"; c.textBaseline = "top"; c.fillStyle = CONFIG.ink;
+    let ty = rowY + (rowH - textH) / 2;
+    c.font = font(nameFit.px, 700); nameFit.lines.forEach(l => { c.fillText(l, gx + fw + 36, ty); ty += nameFit.px * 1.05; });
+    c.font = font(32, 600); c.globalAlpha = 0.65; c.fillText("NACIONALNO JELO", gx + fw + 36, ty + 6); c.globalAlpha = 1;
+    // Tanjur s emojijem
+    let y = rowY + rowH + 40;
+    const r = 175; emojiPlate(c, k.emoji, W / 2, y + r, r); y += 2 * r + 60;
+    // Tekstovi (opis se skraćuje ako ne stane)
+    const bottom = cy + ch - 50, pillH = score != null || S.pickBy ? 110 : 0;
+    const nameF = fit(c, k.jelo, inner, 2, 92, 56, 700);
+    const origF = showOrig(k) ? fit(c, "(" + k.izvorno + ")", inner, 2, 44, 34, 500) : null;
+    let descF = null, hgt = 0;
+    for (let lines = 5; lines >= 1; lines--) {
+      descF = fit(c, k.opis, inner, lines, 42, 36, 400);
+      hgt = nameF.lines.length * nameF.px * 1.08 + (origF ? 14 + origF.lines.length * origF.px * 1.2 : 0) + 30 + descF.lines.length * descF.px * 1.35;
+      if (y + hgt + pillH <= bottom) break;
+    }
+    y += Math.max(0, (bottom - pillH - y - hgt) / 2);        // tekst okomito centriran u preostalom prostoru
+    c.textAlign = "center"; c.textBaseline = "top"; c.fillStyle = CONFIG.ink;
+    c.font = font(nameF.px, 700); nameF.lines.forEach(l => { c.fillText(l, W / 2, y); y += nameF.px * 1.08; });
+    if (origF) { y += 14; c.globalAlpha = 0.72; c.font = font(origF.px, 500); origF.lines.forEach(l => { c.fillText(l, W / 2, y); y += origF.px * 1.2; }); c.globalAlpha = 1; }
+    y += 30; c.globalAlpha = 0.9; c.font = font(descF.px, 400); descF.lines.forEach(l => { c.fillText(l, W / 2, y); y += descF.px * 1.35; }); c.globalAlpha = 1;
+    if (score != null) pill(c, `⭐ ${fmtScore(score)} / 10`, W / 2, bottom - 96, 54, "#FFE14D", CONFIG.ink, false);
+    else if (S.pickBy && S.pick === k) pill(c, `💬 Prijedlog: ${S.pickBy}`, W / 2, bottom - 90, 42, "#E9DEFF", CONFIG.ink, false);
+    // Podnožje
+    c.textAlign = "center"; c.textBaseline = "alphabetic";
+    outlined(c, "jelo iz svake države 🍽️", W / 2, 1838, 56, "#fff", 12);
+  }
+
+  function drawThumb(c, W, H, k, img, ep, score) {
+    background(c, W, H);
+    c.textBaseline = "alphabetic";
+    // Lijevo: tanjur s emojijem i zastavom
+    emojiPlate(c, k.emoji, 330, 400, 225);
+    const fh = 120, fw = img ? flagSize(img, fh) : fh * 1.2;
+    c.save(); c.translate(520 - fw / 2, 520); c.rotate(-0.12); drawFlag(c, img, k.iso2, 0, 0, fh); c.restore();
+    // Desno: epizoda, država, jelo
+    const x0 = 640, maxW = W - x0 - 60, cxR = x0 + maxW / 2;
+    pill(c, `EPIZODA #${ep}`, cxR, 60, 44, "#FF5C8A");
+    c.textAlign = "center";
+    const cn = fit(c, k.ime.toUpperCase(), maxW, 1, 64, 36, 700);
+    outlined(c, cn.lines[0], cxR, 250, cn.px, "#FFE14D", 12, 7);
+    const dn = fit(c, k.jelo, maxW, 3, 104, 56, 700);
+    const lh = dn.px * 1.04, total = dn.lines.length * lh;
+    let y = 300 + (score != null ? 300 : 340) / 2 - total / 2 + dn.px * 0.85;
+    dn.lines.forEach(l => { outlined(c, l, cxR, y, dn.px, "#fff", Math.max(10, dn.px * 0.16), 8); y += lh; });
+    if (score != null) pill(c, `⭐ ${fmtScore(score)} / 10`, cxR, 600, 46, "#FFE14D", CONFIG.ink, false);
+    c.textAlign = "left";
+    c.font = font(28, 600); c.fillStyle = CONFIG.ink; c.globalAlpha = 0.75; c.fillText("Zavrti globus · jelo iz svake države", 40, H - 28); c.globalAlpha = 1;
+  }
+
+  async function draw() {
+    const my = ++token;
+    const W = format === "story" ? 1080 : 1280, H = format === "story" ? 1920 : 720;
+    cv.width = W; cv.height = H;
+    const ep = Math.max(1, parseInt($("shotEp").value, 10) || 1);
+    const score = $("shotScore").checked ? scoreOf(country.id) : null;
+    try { await Promise.all(["700", "600", "500", "400"].map(w => document.fonts.load(`${w} 40px Fredoka`))); } catch (e) { /* bez fonta */ }
+    let img = await loadFlag(country.iso2);
+    if (my !== token) return;
+    const c = cv.getContext("2d");
+    const paint = im => { c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, W, H); (format === "story" ? drawStory : drawThumb)(c, W, H, country, im, ep, score); };
+    paint(img);
+    try { c.getImageData(0, 0, 1, 1); } catch (e) { paint(null); }   // ako zastava "zaključa" canvas, crtaj emoji zastavu
+    blob = null;
+  }
+  function getBlob() {
+    return new Promise((res, rej) => { try { cv.toBlob(b => b ? res(b) : rej(new Error("PNG")), "image/png"); } catch (e) { rej(e); } });
+  }
+  const fileName = () => `epizoda-${Math.max(1, parseInt($("shotEp").value, 10) || 1)}-${norm(country.ime).replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")}-${format === "story" ? "story-1080x1920" : "naslovna-1280x720"}.png`;
+  async function save() {
+    try {
+      blob = blob || await getBlob();
+      const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = fileName();
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+      toast("💾 Slika je spremljena");
+    } catch (e) { console.error(e); toast("😕 Sliku nije moguće spremiti"); }
+  }
+  async function share() {
+    try {
+      blob = blob || await getBlob();
+      const file = new File([blob], fileName(), { type: "image/png" });
+      await navigator.share({ files: [file], title: `${country.jelo} – ${country.ime}` });
+    } catch (e) { if (e && e.name !== "AbortError") toast("😕 Dijeljenje nije uspjelo"); }
+  }
+  function defaultEpisode(c) {
+    if (done.has(c.id)) {
+      const order = [...done].sort((a, b) => ((meta[a] || {}).at || 0) - ((meta[b] || {}).at || 0));
+      return order.indexOf(c.id) + 1;
+    }
+    return done.size + 1;
+  }
+  function open(c) {
+    country = c;
+    $("shotEp").value = defaultEpisode(c);
+    $("shotScore").parentElement.hidden = scoreOf(c.id) == null;
+    try { $("shotShare").hidden = !(navigator.canShare && navigator.canShare({ files: [new File([""], "x.png", { type: "image/png" })] })); } catch (e) { $("shotShare").hidden = true; }
+    openModal("modalShot");
+    draw();
+  }
+  function bind() {
+    $("shotFormats").addEventListener("click", e => {
+      const b = e.target.closest(".chip"); if (!b) return;
+      format = b.dataset.f;
+      for (const x of $("shotFormats").querySelectorAll(".chip")) x.classList.toggle("active", x === b);
+      draw();
+    });
+    $("shotEp").addEventListener("input", draw);
+    $("shotScore").addEventListener("change", draw);
+    $("shotSave").addEventListener("click", save);
+    $("shotShare").addEventListener("click", share);
+  }
+  return { open, bind };
+})();
 
 /** Zvjezdice u pozadini. */
 function makeStars() {
@@ -1563,7 +2259,7 @@ function makeStars() {
    POKRETANJE
    ===================================================================== */
 async function init() {
-  makeStars(); applySettings(); updateCounter(); buildManualList(); bindUI(); layout();
+  makeStars(); applySettings(); updateCounter(); buildManualList(); bindUI(); Target.update(); layout();
   if (!window.d3 || !window.topojson) {
     $("loading").innerHTML = "😕 Ne mogu učitati biblioteke (D3/TopoJSON).<br>Provjeri internetsku vezu i osvježi stranicu.";
     return;
